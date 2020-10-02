@@ -14,7 +14,9 @@ pub mod triggers {
     #[derive(Serialize)]
     struct CreateRequestParams {
         description: String,
-        expression: String
+        expression: String,
+        priority: String,
+        url: String
     }
 
     pub fn create_trigger(api_endpoint: &str, api_token: &str,
@@ -27,12 +29,16 @@ pub mod triggers {
 
         let expression = expression_with_bracket + "}<>0";
 
+        let trigger_name = format!("Site '{}' is unavailable", url);
+
         let request = CreateRequest {
             jsonrpc: JSONRPC.to_string(),
             method: "trigger.create".to_string(),
             params: CreateRequestParams {
-                description: "Check if url available".to_string(),
-                expression
+                description: trigger_name,
+                expression,
+                priority: "4".to_string(),
+                url: url.to_string()
             },
             auth: api_token.to_string(),
             id: 1
