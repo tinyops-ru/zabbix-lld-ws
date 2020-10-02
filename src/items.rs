@@ -1,5 +1,5 @@
 pub mod items {
-    use crate::zabbix::zabbix::JSONRPC;
+    use crate::zabbix::zabbix::{JSONRPC, CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON};
     use serde::Serialize;
     use serde::Deserialize;
     use std::collections::HashMap;
@@ -15,7 +15,6 @@ pub mod items {
 
     #[derive(Serialize)]
     struct ItemSearchParams {
-        key_: String,
         sortfield: String,
         search: HashMap<String, String>
     }
@@ -42,7 +41,6 @@ pub mod items {
             jsonrpc: JSONRPC.to_string(),
             method: "item.get".to_string(),
             params: ItemSearchParams {
-                key_: "vhost.item".to_string(), 
                 sortfield: "name".to_string(),
                 search: search_params
             },
@@ -56,7 +54,7 @@ pub mod items {
 
         let response = client.post(api_endpoint)
             .body(request_body)
-            .header("Content-Type", "application/json")
+            .header(CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON)
             .send()?;
 
         let response_status = response.status();
