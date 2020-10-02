@@ -27,7 +27,8 @@ pub mod items {
     #[derive(Deserialize)]
     pub struct ZabbixItem {
         pub name: String,
-        pub key_: String
+        pub key_: String,
+        pub hostid: String
     }
 
     pub fn find_items(api_endpoint: &str, auth_token: &str) ->
