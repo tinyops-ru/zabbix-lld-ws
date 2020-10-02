@@ -16,7 +16,7 @@ pub mod items {
     #[derive(Serialize)]
     struct ItemSearchParams {
         sortfield: String,
-        search: HashMap<String, String>
+        search: HashMap<String, String>,
     }
 
     #[derive(Deserialize)]
@@ -35,7 +35,7 @@ pub mod items {
         println!("searching items..");
 
         let mut search_params = HashMap::new();
-        search_params.insert("key_".to_string(), "vhost.item".to_string());
+        search_params.insert("key_".to_string(), "vhost.item[".to_string());
         
         let search_request = ItemSearchRequest {
             jsonrpc: JSONRPC.to_string(),
