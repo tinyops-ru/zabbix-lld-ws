@@ -3,7 +3,7 @@
 Add support Web Scenarios to 
 Zabbix [Low Level Discovery](https://www.zabbix.com/documentation/current/manual/discovery/low_level_discovery) feature.
 
-### How it works
+## How it works
 
 1. Tool get items from Zabbix API and filter by regular expression
 2. Check each item:  
@@ -11,7 +11,9 @@ Zabbix [Low Level Discovery](https://www.zabbix.com/documentation/current/manual
     2. Check http-agent item availability, creates item and trigger if doesn't exist. 
     Add trigger dependency to web scenario.
 
-### Getting started
+## Getting started
+
+### Installation
 
 1. Copy `wszl` to `/etc/zabbix` on Zabbix server
 2. Set permissions:
@@ -33,5 +35,6 @@ Zabbix [Low Level Discovery](https://www.zabbix.com/documentation/current/manual
     
 4. Add cron task:
     ```
-    */30 * * * * /etc/zabbix/wszl
+    */30 * * * * /etc/zabbix/wszl gen
     ```   
+    Every 30 minutes tool will generate proper items.
