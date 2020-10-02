@@ -10,7 +10,7 @@ pub mod items {
         method: String,
         params: ItemSearchParams,
         auth: String,
-        id: i8
+        id: u8
     }
 
     #[derive(Serialize)]
