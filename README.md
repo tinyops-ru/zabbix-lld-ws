@@ -38,3 +38,15 @@ Zabbix [Low Level Discovery](https://www.zabbix.com/documentation/current/manual
     */30 * * * * /etc/zabbix/wszl gen
     ```   
     Every 30 minutes tool will generate proper items.
+
+### Usage
+
+#### Generate items and triggers
+
+```
+$ wszl gen
+```
+
+### Roadmap
+
+- Remove generated items
