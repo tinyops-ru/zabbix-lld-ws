@@ -1,8 +1,6 @@
 pub mod auth {
-    use std::io;
     use serde::Serialize;
     use serde::Deserialize;
-    use std::error::Error;
     use crate::zabbix::zabbix::JSONRPC;
 
     #[derive(Serialize)]
@@ -22,9 +20,7 @@ pub mod auth {
 
     #[derive(Deserialize)]
     struct AuthResponse {
-        jsonrpc: String,
-        result: String,
-        id: i8
+        result: String
     }
 
     pub fn login(api_endpoint: &str, username: &str, password: &str) -> Result<String, Box<dyn std::error::Error>> {
