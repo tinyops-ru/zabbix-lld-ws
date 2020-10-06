@@ -2,6 +2,7 @@
 extern crate log;
 extern crate log4rs;
 
+use std::env;
 use std::path::Path;
 use std::process::exit;
 
@@ -35,6 +36,8 @@ mod logging;
 mod errors;
 mod http;
 
+const WORK_DIR_ARGUMENT: &str = "work-dir";
+
 const LOG_LEVEL_ARGUMENT: &str = "log-level";
 const LOG_LEVEL_DEFAULT_VALUE: &str = "info";
 
@@ -46,6 +49,12 @@ fn main() {
         .author("Eugene Lebedev <duke.tougu@gmail.com>")
         .about("Add Web scenarios support for Zabbix Low Level Discovery")
         .arg(
+            Arg::with_name(WORK_DIR_ARGUMENT)
+                .short("d")
+                .help("set working directory")
+                .long(WORK_DIR_ARGUMENT).takes_value(true)
+        )
+        .arg(
             Arg::with_name(LOG_LEVEL_ARGUMENT)
                 .help("set logging level. possible values: debug, info, error, warn, trace")
                 .long(LOG_LEVEL_ARGUMENT)
@@ -54,6 +63,14 @@ fn main() {
                 .default_value(LOG_LEVEL_DEFAULT_VALUE)
         )
         .get_matches();
+
+    let working_directory: &Path = if matches.is_present(WORK_DIR_ARGUMENT) {
+        let work_dir_value = matches.value_of(WORK_DIR_ARGUMENT).unwrap();
+        Path::new(work_dir_value)
+
+    } else { Path::new("/etc/zabbix") };
+
+    env::set_current_dir(working_directory).expect("unable to set working directory");
 
     let logging_level: &str = if matches.is_present(LOG_LEVEL_ARGUMENT) {
         matches.value_of(LOG_LEVEL_ARGUMENT).unwrap()
