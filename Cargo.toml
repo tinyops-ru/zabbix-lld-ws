@@ -1,6 +1,6 @@
 [package]
 name = "zabbix-lld-ws"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Eugene Lebedev <duke.tougu@gmail.com>"]
 edition = "2018"
 
@@ -11,6 +11,7 @@ codegen-units = 1
 panic = 'abort'
 
 [dependencies]
+clap = "2.33.0"
 reqwest = { version = "0.10", features = ["blocking", "json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0"
