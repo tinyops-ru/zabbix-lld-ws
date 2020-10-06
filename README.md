@@ -45,6 +45,10 @@ Zabbix [Low Level Discovery](https://www.zabbix.com/documentation/current/manual
 $ wszl gen
 ```
 
+#### Configuration
+
+File `wszl.yml`.
+
 ### Roadmap
 
 - Remove generated items
