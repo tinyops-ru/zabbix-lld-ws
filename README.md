@@ -14,12 +14,14 @@ Zabbix [Low Level Discovery](https://www.zabbix.com/documentation/current/manual
 
 ### Installation
 
-1. Copy `wszl` to `/etc/zabbix` on Zabbix server
-2. Set permissions:
+1. Setup [site discovery flea](https://github.com/lebe-dev/site-discovery-flea)  
+   It will provide low level discovery for virtual hosts (nginx or apache).
+2. Copy `wszl` to `/etc/zabbix` on Zabbix server
+3. Set permissions:
     ```shell script
     chmod +x /etc/zabbix/wszl
     ```
-3. Create config file `/etc/zabbix/wszl.yml`:
+4. Create config file `/etc/zabbix/wszl.yml`:
     ```shell script
     cp wszl.yml-example /etc/zabbix/wszl.yml
     ```
@@ -30,7 +32,7 @@ Zabbix [Low Level Discovery](https://www.zabbix.com/documentation/current/manual
     chown zabbix: /etc/zabbix
     ```
     
-4. Add cron task:
+5. Add cron task:
     ```
     */30 * * * * /etc/zabbix/wszl gen
     ```   
