@@ -27,7 +27,7 @@ Zabbix [Low Level Discovery](https://www.zabbix.com/documentation/current/manual
    
     Update permissions:
     ```shell script
-    chmod o-rwx /etc/zabbix/.wszl-credentials
+    chmod o-rwx /etc/zabbix/wszl.yml
     chown zabbix: /etc/zabbix
     ```
     
