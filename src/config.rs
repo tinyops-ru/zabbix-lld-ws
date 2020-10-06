@@ -4,6 +4,9 @@ pub mod config {
 
     use yaml_rust::YamlLoader;
 
+    use crate::errors::errors::OperationError;
+    use crate::types::types::OperationResult;
+
     pub struct Config {
         pub zabbix: ZabbixConfig
     }
@@ -14,8 +17,8 @@ pub mod config {
         pub password: String
     }
 
-    pub fn load_config_from_file(file_path: &Path) -> Result<Config, Box<dyn std::error::Error>> {
-        println!("loading config from file '{}'", file_path.display());
+    pub fn load_config_from_file(file_path: &Path) -> OperationResult<Config> {
+        info!("loading config from file '{}'", file_path.display());
 
         let config_file_content = fs::read_to_string(file_path)?;
 
@@ -31,7 +34,7 @@ pub mod config {
                 let password = zabbix_config["password"].as_str()
                                                .expect("property 'password' wasn't found");
 
-                println!("config has been loaded");
+                info!("config has been loaded");
 
                 Ok(
                     Config {
@@ -43,8 +46,10 @@ pub mod config {
                     }
                 )
             }
-            Err(e) =>
-                panic!("config file syntax error: {}", e)
+            Err(e) => {
+                error!("unable to load config from file: {}", e);
+                Err(OperationError::Error)
+            }
         }
     }
 }
