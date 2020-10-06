@@ -35,15 +35,6 @@ pub mod webscenarios {
     }
 
     #[derive(Serialize)]
-    struct CreateRequest {
-        jsonrpc: String,
-        method: String,
-        params: CreateRequestParams,
-        auth: String,
-        id: u8
-    }
-
-    #[derive(Serialize)]
     struct CreateRequestParams {
         name: String,
         hostid: String,
