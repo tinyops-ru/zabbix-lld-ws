@@ -1,5 +1,7 @@
 pub mod triggers {
     use serde::Serialize;
+
+    use crate::errors::errors::OperationError;
     use crate::zabbix::zabbix::{CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON, JSONRPC};
 
     #[derive(Serialize)]
@@ -20,8 +22,8 @@ pub mod triggers {
     }
 
     pub fn create_trigger(api_endpoint: &str, api_token: &str,
-                          host: &str, url: &str) -> Result<(), Box<dyn std::error::Error>> {
-        println!("create trigger for '{}', url '{}'", host, url);
+                          host: &str, url: &str) -> Result<(), OperationError> {
+        debug!("create trigger for '{}', url '{}'", host, url);
 
         let expression_body = format!("{}:web.test.fail[Check index page '{}'].last()", host, url);
 
@@ -48,21 +50,28 @@ pub mod triggers {
 
         let request_body = serde_json::to_string(&request).unwrap();
 
-        let response = client.post(api_endpoint)
+        match client.post(api_endpoint)
             .body(request_body)
             .header(CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON)
-            .send()?;
+            .send() {
+            Ok(response) => {
+                let response_status = response.status();
+                let response_text = response.text().unwrap();
 
-        let response_status = response.status();
-        let response_text = response.text().unwrap();
+                debug!("{}", response_text);
 
-        println!("{}", response_text);
+                if response_status == reqwest::StatusCode::OK {
+                    Ok(())
 
-        if response_status != reqwest::StatusCode::OK {
-            println!("{}", response_text);
-            panic!("unexpected server response code {}", response_status)
+                } else {
+                    error!("unexpected server response code {}", response_status);
+                    Err(OperationError::Error)
+                }
+            }
+            Err(e) => {
+                error!("unable to create trigger: '{}'", e);
+                Err(OperationError::Error)
+            }
         }
-
-        Ok(())
     }
 }
