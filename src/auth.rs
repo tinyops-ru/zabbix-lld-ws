@@ -27,8 +27,8 @@ pub mod auth {
         result: String
     }
 
-    pub fn login(client: &reqwest::blocking::Client, api_endpoint: &str,
-                 username: &str, password: &str) -> StringResult {
+    pub fn login_to_zabbix_api(client: &reqwest::blocking::Client, api_endpoint: &str,
+                               username: &str, password: &str) -> StringResult {
         let auth_request = AuthRequest {
             jsonrpc: JSONRPC.to_string(),
             method: "user.login".to_string(),

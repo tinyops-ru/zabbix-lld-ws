@@ -6,7 +6,7 @@ use std::path::Path;
 
 use regex::Regex;
 
-use crate::auth::auth::login;
+use crate::auth::auth::login_to_zabbix_api;
 use crate::config::config::load_config_from_file;
 use crate::hosts::hosts::find_hosts;
 use crate::items::items::find_zabbix_items;
@@ -42,8 +42,8 @@ fn main() {
         Ok(config) => {
             let client = reqwest::blocking::Client::new();
 
-            match login(&client, &config.zabbix.api_endpoint,
-                        &config.zabbix.username, &config.zabbix.password) {
+            match login_to_zabbix_api(&client, &config.zabbix.api_endpoint,
+                                      &config.zabbix.username, &config.zabbix.password) {
                 Ok(token) => {
                     debug!("login success: token '{}'", token);
 
