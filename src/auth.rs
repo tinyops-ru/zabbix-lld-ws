@@ -1,6 +1,10 @@
 pub mod auth {
-    use serde::Serialize;
     use serde::Deserialize;
+    use serde::Serialize;
+
+    use crate::errors::errors::OperationError;
+    use crate::http::http::send_post_request;
+    use crate::types::types::StringResult;
     use crate::zabbix::zabbix::JSONRPC;
 
     #[derive(Serialize)]
@@ -23,7 +27,7 @@ pub mod auth {
         result: String
     }
 
-    pub fn login(api_endpoint: &str, username: &str, password: &str) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn login(api_endpoint: &str, username: &str, password: &str) -> StringResult {
         let auth_request = AuthRequest {
             jsonrpc: JSONRPC.to_string(),
             method: "user.login".to_string(),
@@ -36,25 +40,23 @@ pub mod auth {
 
         let client = reqwest::blocking::Client::new();
 
-        let request_body = serde_json::to_string(&auth_request).unwrap();
-
-        let response = client.post(api_endpoint)
-                                       .body(request_body)
-                                       .header("Content-Type", "application/json")
-                                       .send()?;
-
-        let response_status = response.status();
-        let response_text = response.text().unwrap();
-
-        println!("{}", response_text);
-
-        if response_status != reqwest::StatusCode::OK {
-            println!("{}", response_text);
-            panic!("unexpected server response code {}", response_status)
+        match send_post_request(&client, api_endpoint, auth_request) {
+            Ok(response) => {
+                match serde_json::from_str::<AuthResponse>(&response) {
+                    Ok(auth_response) => {
+                        debug!("auth token: {}", auth_response.result);
+                        Ok(String::from(auth_response.result))
+                    }
+                    Err(_) => {
+                        error!("unsupported auth response");
+                        Err(OperationError::Error)
+                    }
+                }
+            }
+            Err(_) => {
+                error!("authentication error");
+                Err(OperationError::Error)
+            }
         }
-
-        let auth_response: AuthResponse = serde_json::from_str(&response_text).unwrap();
-
-        Ok(String::from(auth_response.result))
     }
 }

@@ -14,6 +14,8 @@ use crate::logging::logging::get_logging_config;
 use crate::triggers::triggers::create_trigger;
 use crate::webscenarios::webscenarios::{create_web_scenario, find_web_scenarios};
 
+mod types;
+
 mod config;
 mod config_tests;
 
@@ -26,6 +28,7 @@ mod triggers;
 mod hosts;
 mod logging;
 mod errors;
+mod http;
 
 const LOG_LEVEL_DEFAULT_VALUE: &str = "info";
 
