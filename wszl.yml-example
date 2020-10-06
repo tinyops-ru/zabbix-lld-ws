@@ -1,0 +1,4 @@
+zabbix:
+  api-endpoint: http://zabbix/api_jsonrpc.php
+  username: CHANGE-ME
+  password: CHANGE-ME

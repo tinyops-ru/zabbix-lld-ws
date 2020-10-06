@@ -1,6 +1,6 @@
 [package]
 name = "zabbix-lld-ws"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Eugene Lebedev <duke.tougu@gmail.com>"]
 edition = "2018"
 
@@ -16,3 +16,4 @@ serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0"
 serde_json = "1.0"
 regex = "1"
+yaml-rust = "0.4"
