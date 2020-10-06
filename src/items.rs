@@ -4,16 +4,7 @@ pub mod items {
     use serde::Deserialize;
     use serde::Serialize;
 
-    use crate::zabbix::zabbix::{CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON, JSONRPC};
-
-    #[derive(Serialize)]
-    struct ItemSearchRequest {
-        jsonrpc: String,
-        method: String,
-        params: ItemSearchParams,
-        auth: String,
-        id: u8
-    }
+    use crate::zabbix::zabbix::{CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON, ZabbixRequest};
 
     #[derive(Serialize)]
     struct ItemSearchParams {
@@ -40,19 +31,17 @@ pub mod items {
 
         let mut search_params = HashMap::new();
         search_params.insert("key_".to_string(), "vhost.item[".to_string());
-        
-        let search_request = ItemSearchRequest {
-            jsonrpc: JSONRPC.to_string(),
-            method: "item.get".to_string(),
-            params: ItemSearchParams {
-                sortfield: "name".to_string(),
-                search: search_params
-            },
-            auth: auth_token.to_string(),
-            id: 1
+
+        let params = ItemSearchParams {
+            sortfield: "name".to_string(),
+            search: search_params
         };
 
-        let request_body = serde_json::to_string(&search_request).unwrap();
+        let request: ZabbixRequest<ItemSearchParams> = ZabbixRequest::new(
+            "item.get", params, auth_token
+        );
+
+        let request_body = serde_json::to_string(&request).unwrap();
 
         let response = client.post(api_endpoint)
             .body(request_body)

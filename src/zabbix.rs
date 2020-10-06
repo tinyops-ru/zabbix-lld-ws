@@ -14,4 +14,16 @@ pub mod zabbix {
         pub auth: String,
         pub id: i8
     }
+
+    impl<P: Serialize> ZabbixRequest<P> {
+        pub fn new(method: &str, params: P, auth_token: &str) -> ZabbixRequest<P> {
+            ZabbixRequest {
+                jsonrpc: JSONRPC.to_string(),
+                method: method.to_string(),
+                params,
+                auth: auth_token.to_string(),
+                id: 1
+            }
+        }
+    }
 }
