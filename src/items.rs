@@ -31,7 +31,7 @@ pub mod items {
     pub fn find_zabbix_items(client: &reqwest::blocking::Client,
                              api_endpoint: &str, auth_token: &str) ->
                                                                 OperationResult<Vec<ZabbixItem>> {
-        println!("searching items..");
+        info!("searching items..");
 
         let mut search_params = HashMap::new();
         search_params.insert("key_".to_string(), "vhost.item[".to_string());
