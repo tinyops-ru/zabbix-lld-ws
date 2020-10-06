@@ -21,4 +21,4 @@ yaml-rust = "0.4"
 thiserror = "1.0"
 
 log = "0.4"
-log4rs = "0.10.0"
+log4rs = "0.12"
