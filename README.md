@@ -49,6 +49,12 @@ $ wszl gen
 
 File `wszl.yml`.
 
+### Troubleshooting
+
+Check `wszl.log` file for details.
+
+You can switch logging levels with `--log-level` option.
+
 ### Roadmap
 
 - Remove generated items
