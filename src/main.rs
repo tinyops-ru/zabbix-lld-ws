@@ -40,7 +40,9 @@ fn main() {
 
     match load_config_from_file(config_file_path) {
         Ok(config) => {
-            match login(&config.zabbix.api_endpoint,
+            let client = reqwest::blocking::Client::new();
+
+            match login(&client, &config.zabbix.api_endpoint,
                         &config.zabbix.username, &config.zabbix.password) {
                 Ok(token) => {
                     debug!("login success: token '{}'", token);

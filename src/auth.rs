@@ -27,7 +27,8 @@ pub mod auth {
         result: String
     }
 
-    pub fn login(api_endpoint: &str, username: &str, password: &str) -> StringResult {
+    pub fn login(client: &reqwest::blocking::Client, api_endpoint: &str,
+                 username: &str, password: &str) -> StringResult {
         let auth_request = AuthRequest {
             jsonrpc: JSONRPC.to_string(),
             method: "user.login".to_string(),
@@ -37,8 +38,6 @@ pub mod auth {
             id: 1,
             auth: None
         };
-
-        let client = reqwest::blocking::Client::new();
 
         match send_post_request(&client, api_endpoint, auth_request) {
             Ok(response) => {
