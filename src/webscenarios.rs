@@ -4,6 +4,9 @@ pub mod webscenarios {
     use serde::Deserialize;
     use serde::Serialize;
 
+    use crate::errors::errors::OperationError;
+    use crate::http::http::send_post_request;
+    use crate::types::types::OperationResult;
     use crate::zabbix::zabbix::{CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON, JSONRPC, ZabbixRequest};
 
     #[derive(Deserialize)]
@@ -56,7 +59,7 @@ pub mod webscenarios {
 
     pub fn find_web_scenarios(client: &reqwest::blocking::Client,
                               api_endpoint: &str, auth_token: &str) ->
-                                    Result<Vec<ZabbixWebScenario>, Box<dyn std::error::Error>> {
+                                                        OperationResult<Vec<ZabbixWebScenario>> {
         println!("searching web scenarios..");
 
         let mut search_params = HashMap::new();
@@ -70,26 +73,17 @@ pub mod webscenarios {
             "httptest.get", params, auth_token
         );
 
-        let request_body = serde_json::to_string(&request).unwrap();
-
-        let response = client.post(api_endpoint)
-            .body(request_body)
-            .header(CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON)
-            .send()?;
-
-        let response_status = response.status();
-        let response_text = response.text().unwrap();
-
-        println!("{}", response_text);
-
-        if response_status != reqwest::StatusCode::OK {
-            println!("{}", response_text);
-            panic!("unexpected server response code {}", response_status)
+        match send_post_request(client, api_endpoint, request) {
+            Ok(response) => {
+                let search_response: WebScenariosResponse = serde_json::from_str(&response)
+                                                .expect("unsupported zabbix api response");
+                Ok(search_response.result)
+            }
+            Err(_) => {
+                error!("unable to find zabbix items");
+                Err(OperationError::Error)
+            }
         }
-
-        let search_response: WebScenariosResponse = serde_json::from_str(&response_text).unwrap();
-
-        Ok(search_response.result)
     }
 
     pub fn create_web_scenario(client: &reqwest::blocking::Client,
