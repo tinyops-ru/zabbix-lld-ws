@@ -20,12 +20,10 @@ Zabbix [Low Level Discovery](https://www.zabbix.com/documentation/current/manual
     ```shell script
     chmod +x /etc/zabbix/wszl
     ```
-3. Create credentials file `/etc/zabbix/.wszl-credentials`:
+3. Create config file `/etc/zabbix/wszl.yml`:
     ```shell script
-    username=CHANGE-ME
-    password=CHANGE-ME
-    ```   
-    Set username and password for access to Zabbix API.
+    cp wszl.yml-example /etc/zabbix/wszl.yml
+    ```
    
     Update permissions:
     ```shell script
