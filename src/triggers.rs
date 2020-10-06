@@ -22,7 +22,8 @@ pub mod triggers {
         url: String
     }
 
-    pub fn create_trigger(api_endpoint: &str, api_token: &str,
+    pub fn create_trigger(client: &reqwest::blocking::Client,
+                          api_endpoint: &str, api_token: &str,
                           host: &str, url: &str) -> EmptyResult {
         debug!("create trigger for '{}', url '{}'", host, url);
 
@@ -46,8 +47,6 @@ pub mod triggers {
             auth: api_token.to_string(),
             id: 1
         };
-
-        let client = reqwest::blocking::Client::new();
 
         let request_body = serde_json::to_string(&request).unwrap();
 

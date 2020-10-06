@@ -84,7 +84,7 @@ fn main() {
                                                                         Ok(_) => {
                                                                             info!("web scenario has been created for '{}'", url);
 
-                                                                            match create_trigger(&config.zabbix.api_endpoint, &token, &host.host, &url) {
+                                                                            match create_trigger(&client, &config.zabbix.api_endpoint, &token, &host.host, &url) {
                                                                                 Ok(_) => println!("trigger has been created"),
                                                                                 Err(_) => error!("error > unable to create trigger for url '{}'", url)
                                                                             }
