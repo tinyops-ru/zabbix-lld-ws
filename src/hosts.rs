@@ -2,7 +2,10 @@ pub mod hosts {
     use serde::Deserialize;
     use serde::Serialize;
 
-    use crate::zabbix::zabbix::{CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON, JSONRPC};
+    use crate::errors::errors::OperationError;
+    use crate::http::http::send_post_request;
+    use crate::types::types::OperationResult;
+    use crate::zabbix::zabbix::ZabbixRequest;
 
     #[derive(Serialize)]
     struct SearchRequest {
@@ -31,36 +34,24 @@ pub mod hosts {
 
     pub fn find_hosts(client: &reqwest::blocking::Client,
                       api_endpoint: &str, api_token: &str, ids: Vec<String>) ->
-                                             Result<Vec<ZabbixHost>, Box<dyn std::error::Error>> {
-        println!("find hosts by ids..");
-        
-        let request = SearchRequest {
-            jsonrpc: JSONRPC.to_string(),
-            method: "host.get".to_string(),
-            params: SearchRequestParams { hostids: ids },
-            auth: api_token.to_string(),
-            id: 1
-        };
+                                                                OperationResult<Vec<ZabbixHost>> {
+        info!("find hosts by ids..");
 
-        let request_body = serde_json::to_string(&request).unwrap();
+        let params = SearchRequestParams { hostids: ids };
 
-        let response = client.post(api_endpoint)
-            .body(request_body)
-            .header(CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON)
-            .send()?;
+        let request: ZabbixRequest<SearchRequestParams> = ZabbixRequest::new(
+            "host.get", params, api_token
+        );
 
-        let response_status = response.status();
-        let response_text = response.text().unwrap();
-
-        println!("{}", response_text);
-
-        if response_status != reqwest::StatusCode::OK {
-            println!("{}", response_text);
-            panic!("unexpected server response code {}", response_status)
+        match send_post_request(client, api_endpoint, request) {
+            Ok(response) => {
+                let search_response: SearchResponse = serde_json::from_str(&response).unwrap();
+                Ok(search_response.result)
+            }
+            Err(_) => {
+                error!("unable to find zabbix hosts");
+                Err(OperationError::Error)
+            }
         }
-
-        let search_response: SearchResponse = serde_json::from_str(&response_text).unwrap();
-
-        Ok(search_response.result)
     }
 }
