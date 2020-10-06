@@ -3,7 +3,7 @@ pub mod triggers {
 
     use crate::errors::errors::OperationError;
     use crate::types::types::EmptyResult;
-    use crate::zabbix::zabbix::{CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON, JSONRPC};
+    use crate::zabbix::zabbix::{CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON, ZabbixRequest};
 
     #[derive(Serialize)]
     struct CreateRequest {
@@ -35,18 +35,16 @@ pub mod triggers {
 
         let trigger_name = format!("Site '{}' is unavailable", url);
 
-        let request = CreateRequest {
-            jsonrpc: JSONRPC.to_string(),
-            method: "trigger.create".to_string(),
-            params: CreateRequestParams {
-                description: trigger_name,
-                expression,
-                priority: "4".to_string(),
-                url: url.to_string()
-            },
-            auth: api_token.to_string(),
-            id: 1
+        let params = CreateRequestParams {
+            description: trigger_name,
+            expression,
+            priority: "4".to_string(),
+            url: url.to_string()
         };
+
+        let request: ZabbixRequest<CreateRequestParams> = ZabbixRequest::new(
+            "trigger.create", params, api_token
+        );
 
         let request_body = serde_json::to_string(&request).unwrap();
 
