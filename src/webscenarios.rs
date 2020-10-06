@@ -1,8 +1,10 @@
 pub mod webscenarios {
     use std::collections::HashMap;
-    use serde::Serialize;
+
     use serde::Deserialize;
-    use crate::zabbix::zabbix::{JSONRPC, CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON};
+    use serde::Serialize;
+
+    use crate::zabbix::zabbix::{CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON, JSONRPC};
 
     #[derive(Deserialize)]
     pub struct ZabbixWebScenario {
@@ -52,8 +54,9 @@ pub mod webscenarios {
         no: u8
     }
 
-    pub fn find_web_scenarios(api_endpoint: &str, auth_token: &str) ->
-                                        Result<Vec<ZabbixWebScenario>, Box<dyn std::error::Error>> {
+    pub fn find_web_scenarios(client: &reqwest::blocking::Client,
+                              api_endpoint: &str, auth_token: &str) ->
+                                    Result<Vec<ZabbixWebScenario>, Box<dyn std::error::Error>> {
         println!("searching web scenarios..");
 
         let mut search_params = HashMap::new();
@@ -68,8 +71,6 @@ pub mod webscenarios {
             auth: auth_token.to_string(),
             id: 1
         };
-
-        let client = reqwest::blocking::Client::new();
 
         let request_body = serde_json::to_string(&request).unwrap();
 
@@ -93,7 +94,8 @@ pub mod webscenarios {
         Ok(search_response.result)
     }
 
-    pub fn create_web_scenario(api_endpoint: &str, auth_token: &str,
+    pub fn create_web_scenario(client: &reqwest::blocking::Client,
+                               api_endpoint: &str, auth_token: &str,
                                item_url: &str, host_id: &str) ->
                                                             Result<(), Box<dyn std::error::Error>> {
         println!("creating web scenario for '{}'", item_url);
@@ -122,8 +124,6 @@ pub mod webscenarios {
             auth: auth_token.to_string(),
             id: 1
         };
-
-        let client = reqwest::blocking::Client::new();
 
         let request_body = serde_json::to_string(&request).unwrap();
 

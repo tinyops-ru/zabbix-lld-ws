@@ -51,7 +51,7 @@ fn main() {
                         Ok(items) => {
                             debug!("received items:");
 
-                            match find_web_scenarios(&config.zabbix.api_endpoint, &token) {
+                            match find_web_scenarios(&client, &config.zabbix.api_endpoint, &token) {
                                 Ok(web_scenarios) => {
                                     debug!("web scenarios have been obtained");
 
@@ -80,7 +80,7 @@ fn main() {
 
                                                             match hosts.iter().find(|host| host.hostid == item.hostid) {
                                                                 Some(host) => {
-                                                                    match create_web_scenario(&config.zabbix.api_endpoint, &token, &url, &host.hostid) {
+                                                                    match create_web_scenario(&client, &config.zabbix.api_endpoint, &token, &url, &host.hostid) {
                                                                         Ok(_) => {
                                                                             info!("web scenario has been created for '{}'", url);
 
