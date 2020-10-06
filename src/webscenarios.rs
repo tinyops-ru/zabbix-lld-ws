@@ -4,7 +4,7 @@ pub mod webscenarios {
     use serde::Deserialize;
     use serde::Serialize;
 
-    use crate::zabbix::zabbix::{CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON, JSONRPC};
+    use crate::zabbix::zabbix::{CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON, JSONRPC, ZabbixRequest};
 
     #[derive(Deserialize)]
     pub struct ZabbixWebScenario {
@@ -62,15 +62,13 @@ pub mod webscenarios {
         let mut search_params = HashMap::new();
         search_params.insert("key_".to_string(), "Check index page '".to_string());
 
-        let request = GetWebScenariosRequest {
-            jsonrpc: JSONRPC.to_string(),
-            method: "httptest.get".to_string(),
-            params: GetWebScenariosRequestParams {
-                search: search_params
-            },
-            auth: auth_token.to_string(),
-            id: 1
+        let params = GetWebScenariosRequestParams {
+            search: search_params
         };
+
+        let request: ZabbixRequest<GetWebScenariosRequestParams> = ZabbixRequest::new(
+            "httptest.get", params, auth_token
+        );
 
         let request_body = serde_json::to_string(&request).unwrap();
 
