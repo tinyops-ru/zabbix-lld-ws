@@ -16,15 +16,6 @@ pub mod webscenarios {
     }
 
     #[derive(Serialize)]
-    struct GetWebScenariosRequest {
-        jsonrpc: String,
-        method: String,
-        params: GetWebScenariosRequestParams,
-        auth: String,
-        id: u8
-    }
-
-    #[derive(Serialize)]
     struct GetWebScenariosRequestParams {
         search: HashMap<String, String>
     }
