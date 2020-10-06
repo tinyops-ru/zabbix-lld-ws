@@ -3,6 +3,8 @@ pub mod zabbix {
 
     pub const JSONRPC: &str = "2.0";
 
+    pub const UNSUPPORTED_RESPONSE_MESSAGE: &str = "unsupported zabbix api response";
+
     #[derive(Serialize)]
     pub struct ZabbixRequest<P: Serialize> {
         pub jsonrpc: String,

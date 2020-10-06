@@ -5,6 +5,7 @@ pub mod hosts {
     use crate::errors::errors::OperationError;
     use crate::http::http::send_post_request;
     use crate::types::types::OperationResult;
+    use crate::zabbix::zabbix;
     use crate::zabbix::zabbix::ZabbixRequest;
 
     #[derive(Serialize)]
@@ -45,7 +46,8 @@ pub mod hosts {
 
         match send_post_request(client, api_endpoint, request) {
             Ok(response) => {
-                let search_response: SearchResponse = serde_json::from_str(&response).unwrap();
+                let search_response: SearchResponse = serde_json::from_str(&response)
+                                                .expect(zabbix::UNSUPPORTED_RESPONSE_MESSAGE);
                 Ok(search_response.result)
             }
             Err(_) => {

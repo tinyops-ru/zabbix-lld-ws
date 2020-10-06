@@ -7,6 +7,7 @@ pub mod webscenarios {
     use crate::errors::errors::OperationError;
     use crate::http::http::send_post_request;
     use crate::types::types::{EmptyResult, OperationResult};
+    use crate::zabbix::zabbix;
     use crate::zabbix::zabbix::ZabbixRequest;
 
     #[derive(Deserialize)]
@@ -76,7 +77,7 @@ pub mod webscenarios {
         match send_post_request(client, api_endpoint, request) {
             Ok(response) => {
                 let search_response: WebScenariosResponse = serde_json::from_str(&response)
-                                                .expect("unsupported zabbix api response");
+                                            .expect(zabbix::UNSUPPORTED_RESPONSE_MESSAGE);
                 Ok(search_response.result)
             }
             Err(_) => {
