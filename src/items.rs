@@ -1,8 +1,10 @@
 pub mod items {
-    use crate::zabbix::zabbix::{JSONRPC, CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON};
-    use serde::Serialize;
-    use serde::Deserialize;
     use std::collections::HashMap;
+
+    use serde::Deserialize;
+    use serde::Serialize;
+
+    use crate::zabbix::zabbix::{CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON, JSONRPC};
 
     #[derive(Serialize)]
     struct ItemSearchRequest {
@@ -31,7 +33,7 @@ pub mod items {
         pub hostid: String
     }
 
-    pub fn find_items(api_endpoint: &str, auth_token: &str) ->
+    pub fn find_zabbix_items(api_endpoint: &str, auth_token: &str) ->
                                             Result<Vec<ZabbixItem>, Box<dyn std::error::Error>> {
         println!("searching items..");
 

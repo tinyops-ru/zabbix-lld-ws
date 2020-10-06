@@ -9,7 +9,7 @@ use regex::Regex;
 use crate::auth::auth::login;
 use crate::config::config::load_config_from_file;
 use crate::hosts::hosts::find_hosts;
-use crate::items::items::find_items;
+use crate::items::items::find_zabbix_items;
 use crate::logging::logging::get_logging_config;
 use crate::triggers::triggers::create_trigger;
 use crate::webscenarios::webscenarios::{create_web_scenario, find_web_scenarios};
@@ -47,7 +47,7 @@ fn main() {
                 Ok(token) => {
                     debug!("login success: token '{}'", token);
 
-                    match find_items(&config.zabbix.api_endpoint, &token) {
+                    match find_zabbix_items(&config.zabbix.api_endpoint, &token) {
                         Ok(items) => {
                             debug!("received items:");
 
