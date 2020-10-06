@@ -9,15 +9,6 @@ pub mod hosts {
     use crate::zabbix::zabbix::ZabbixRequest;
 
     #[derive(Serialize)]
-    struct SearchRequest {
-        jsonrpc: String,
-        method: String,
-        params: SearchRequestParams,
-        auth: String,
-        id: u8
-    }
-
-    #[derive(Serialize)]
     struct SearchRequestParams {
         hostids: Vec<String>
     }
