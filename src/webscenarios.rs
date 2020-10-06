@@ -61,7 +61,7 @@ pub mod webscenarios {
     pub fn find_web_scenarios(client: &reqwest::blocking::Client,
                               api_endpoint: &str, auth_token: &str) ->
                                                         OperationResult<Vec<ZabbixWebScenario>> {
-        println!("searching web scenarios..");
+        info!("searching web scenarios..");
 
         let mut search_params = HashMap::new();
         search_params.insert("key_".to_string(), "Check index page '".to_string());
@@ -90,7 +90,7 @@ pub mod webscenarios {
     pub fn create_web_scenario(client: &reqwest::blocking::Client,
                                api_endpoint: &str, auth_token: &str,
                                item_url: &str, host_id: &str) -> EmptyResult {
-        println!("creating web scenario for '{}'", item_url);
+        info!("creating web scenario for '{}'", item_url);
 
         let mut search_params = HashMap::new();
         search_params.insert("key_".to_string(), "Check index page '".to_string());
