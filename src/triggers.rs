@@ -2,6 +2,7 @@ pub mod triggers {
     use serde::Serialize;
 
     use crate::errors::errors::OperationError;
+    use crate::types::types::EmptyResult;
     use crate::zabbix::zabbix::{CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON, JSONRPC};
 
     #[derive(Serialize)]
@@ -22,7 +23,7 @@ pub mod triggers {
     }
 
     pub fn create_trigger(api_endpoint: &str, api_token: &str,
-                          host: &str, url: &str) -> Result<(), OperationError> {
+                          host: &str, url: &str) -> EmptyResult {
         debug!("create trigger for '{}', url '{}'", host, url);
 
         let expression_body = format!("{}:web.test.fail[Check index page '{}'].last()", host, url);
