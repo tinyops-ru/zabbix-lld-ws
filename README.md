@@ -1,15 +1,15 @@
 # WSZL
 
+> Under development
+
 Add support Web Scenarios to 
 Zabbix [Low Level Discovery](https://www.zabbix.com/documentation/current/manual/discovery/low_level_discovery) feature.
 
 ## How it works
 
-1. Tool get items from Zabbix API and filter by regular expression
+1. WSZL gets items from Zabbix API and filters by mask
 2. Check each item:  
     1. Check web scenario item availability, creates if doesn't exist. Creates trigger.
-    2. Check http-agent item availability, creates item and trigger if doesn't exist. 
-    Add trigger dependency to web scenario.
 
 ## Getting started
 
