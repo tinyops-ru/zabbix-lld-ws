@@ -7,9 +7,8 @@ Zabbix [Low Level Discovery](https://www.zabbix.com/documentation/current/manual
 
 ## How it works
 
-1. WSZL gets items from Zabbix API and filters by mask
-2. Check each item:  
-    1. Check web scenario item availability, creates if doesn't exist. Creates trigger.
+1. WSZL gets items from Zabbix API by mask
+2. Creates missing web scenarios and triggers  
 
 ## Getting started
 
