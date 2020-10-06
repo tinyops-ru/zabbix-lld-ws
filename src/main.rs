@@ -47,7 +47,7 @@ fn main() {
                 Ok(token) => {
                     debug!("login success: token '{}'", token);
 
-                    match find_zabbix_items(&config.zabbix.api_endpoint, &token) {
+                    match find_zabbix_items(&client, &config.zabbix.api_endpoint, &token) {
                         Ok(items) => {
                             debug!("received items:");
 

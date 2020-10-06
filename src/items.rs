@@ -33,7 +33,8 @@ pub mod items {
         pub hostid: String
     }
 
-    pub fn find_zabbix_items(api_endpoint: &str, auth_token: &str) ->
+    pub fn find_zabbix_items(client: &reqwest::blocking::Client,
+                             api_endpoint: &str, auth_token: &str) ->
                                             Result<Vec<ZabbixItem>, Box<dyn std::error::Error>> {
         println!("searching items..");
 
@@ -50,8 +51,6 @@ pub mod items {
             auth: auth_token.to_string(),
             id: 1
         };
-
-        let client = reqwest::blocking::Client::new();
 
         let request_body = serde_json::to_string(&search_request).unwrap();
 
