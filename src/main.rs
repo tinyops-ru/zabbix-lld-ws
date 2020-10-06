@@ -6,7 +6,7 @@ use std::env;
 use std::path::Path;
 use std::process::exit;
 
-use clap::{App, Arg};
+use clap::{App, Arg, SubCommand};
 use regex::Regex;
 use reqwest::blocking::Client;
 
@@ -36,6 +36,8 @@ mod logging;
 mod errors;
 mod http;
 
+const GENERATE_COMMAND: &str = "gen";
+
 const WORK_DIR_ARGUMENT: &str = "work-dir";
 
 const LOG_LEVEL_ARGUMENT: &str = "log-level";
@@ -62,6 +64,9 @@ fn main() {
                 .takes_value(true).required(false)
                 .default_value(LOG_LEVEL_DEFAULT_VALUE)
         )
+        .subcommand(SubCommand::with_name(GENERATE_COMMAND)
+            .about("generate web scenarios and triggers for zabbix items")
+        )
         .get_matches();
 
     let working_directory: &Path = if matches.is_present(WORK_DIR_ARGUMENT) {
@@ -79,18 +84,23 @@ fn main() {
     let logging_config = get_logging_config(logging_level);
     log4rs::init_config(logging_config).unwrap();
 
-    let config_file_path = Path::new("wszl.yml");
+    match matches.subcommand_matches(GENERATE_COMMAND) {
+        Some(_) => {
+            let config_file_path = Path::new("wszl.yml");
 
-    match load_config_from_file(config_file_path) {
-        Ok(config) => {
-            let client = reqwest::blocking::Client::new();
+            match load_config_from_file(config_file_path) {
+                Ok(config) => {
+                    let client = reqwest::blocking::Client::new();
 
-            match create_web_scenarios_and_triggers(&client, &config.zabbix) {
-                Ok(_) => info!("web scenarios and triggers have been created"),
-                Err(_) => exit(ERROR_EXIT_CODE)
+                    match create_web_scenarios_and_triggers(&client, &config.zabbix) {
+                        Ok(_) => info!("web scenarios and triggers have been created"),
+                        Err(_) => exit(ERROR_EXIT_CODE)
+                    }
+                }
+                Err(_) => error!("unable to load config from file")
             }
         }
-        Err(_) => error!("unable to load config from file")
+        None => {}
     }
 }
 
