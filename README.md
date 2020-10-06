@@ -60,4 +60,6 @@ You can switch logging levels with `--log-level` option.
 
 ## Roadmap
 
+- Control web scenario parameters with command options (title, return code, etc.)
+- Control trigger parameters with command options (title, severity, description, etc.)
 - Remove generated items
