@@ -4,7 +4,10 @@ pub mod items {
     use serde::Deserialize;
     use serde::Serialize;
 
-    use crate::zabbix::zabbix::{CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON, ZabbixRequest};
+    use crate::errors::errors::OperationError;
+    use crate::http::http::send_post_request;
+    use crate::types::types::OperationResult;
+    use crate::zabbix::zabbix::ZabbixRequest;
 
     #[derive(Serialize)]
     struct ItemSearchParams {
@@ -26,7 +29,7 @@ pub mod items {
 
     pub fn find_zabbix_items(client: &reqwest::blocking::Client,
                              api_endpoint: &str, auth_token: &str) ->
-                                            Result<Vec<ZabbixItem>, Box<dyn std::error::Error>> {
+                                                                OperationResult<Vec<ZabbixItem>> {
         println!("searching items..");
 
         let mut search_params = HashMap::new();
@@ -41,25 +44,17 @@ pub mod items {
             "item.get", params, auth_token
         );
 
-        let request_body = serde_json::to_string(&request).unwrap();
+        match send_post_request(client, api_endpoint, request) {
+            Ok(response) => {
+                let search_response: ItemSearchResponse = serde_json::from_str(&response)
+                                                .expect("unsupported zabbix api response");
 
-        let response = client.post(api_endpoint)
-            .body(request_body)
-            .header(CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON)
-            .send()?;
-
-        let response_status = response.status();
-        let response_text = response.text().unwrap();
-
-        println!("{}", response_text);
-
-        if response_status != reqwest::StatusCode::OK {
-            println!("{}", response_text);
-            panic!("unexpected server response code {}", response_status)
+                Ok(search_response.result)
+            }
+            Err(_) => {
+                error!("unable to find zabbix items");
+                Err(OperationError::Error)
+            }
         }
-
-        let search_response: ItemSearchResponse = serde_json::from_str(&response_text).unwrap();
-
-        Ok(search_response.result)
     }
 }
