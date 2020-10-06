@@ -7,15 +7,6 @@ pub mod triggers {
     use crate::zabbix::zabbix::ZabbixRequest;
 
     #[derive(Serialize)]
-    struct CreateRequest {
-        jsonrpc: String,
-        method: String,
-        params: CreateRequestParams,
-        auth: String,
-        id: u8
-    }
-
-    #[derive(Serialize)]
     struct CreateRequestParams {
         description: String,
         expression: String,
