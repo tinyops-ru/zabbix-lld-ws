@@ -2,8 +2,9 @@ pub mod triggers {
     use serde::Serialize;
 
     use crate::errors::errors::OperationError;
+    use crate::http::http::send_post_request;
     use crate::types::types::EmptyResult;
-    use crate::zabbix::zabbix::{CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON, ZabbixRequest};
+    use crate::zabbix::zabbix::ZabbixRequest;
 
     #[derive(Serialize)]
     struct CreateRequest {
@@ -46,28 +47,13 @@ pub mod triggers {
             "trigger.create", params, api_token
         );
 
-        let request_body = serde_json::to_string(&request).unwrap();
-
-        match client.post(api_endpoint)
-            .body(request_body)
-            .header(CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON)
-            .send() {
-            Ok(response) => {
-                let response_status = response.status();
-                let response_text = response.text().unwrap();
-
-                debug!("{}", response_text);
-
-                if response_status == reqwest::StatusCode::OK {
-                    Ok(())
-
-                } else {
-                    error!("unexpected server response code {}", response_status);
-                    Err(OperationError::Error)
-                }
+        match send_post_request(client, api_endpoint, request) {
+            Ok(_) => {
+                info!("trigger has been created for url '{}'", url);
+                Ok(())
             }
-            Err(e) => {
-                error!("unable to create trigger: '{}'", e);
+            Err(_) => {
+                error!("unable to find zabbix items");
                 Err(OperationError::Error)
             }
         }
