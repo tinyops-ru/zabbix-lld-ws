@@ -59,7 +59,7 @@ fn main() {
 
                                     let host_ids: Vec<String> = items.iter().map(|item| item.hostid.to_string()).collect();
 
-                                    match find_hosts(&config.zabbix.api_endpoint, &token, host_ids) {
+                                    match find_hosts(&client, &config.zabbix.api_endpoint, &token, host_ids) {
                                         Ok(hosts) => {
 
                                             for item in items {

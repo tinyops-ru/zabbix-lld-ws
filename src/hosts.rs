@@ -1,7 +1,8 @@
 pub mod hosts {
-    use serde::Serialize;
     use serde::Deserialize;
-    use crate::zabbix::zabbix::{JSONRPC, CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON};
+    use serde::Serialize;
+
+    use crate::zabbix::zabbix::{CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON, JSONRPC};
 
     #[derive(Serialize)]
     struct SearchRequest {
@@ -28,7 +29,8 @@ pub mod hosts {
         pub host: String
     }
 
-    pub fn find_hosts(api_endpoint: &str, api_token: &str, ids: Vec<String>) ->
+    pub fn find_hosts(client: &reqwest::blocking::Client,
+                      api_endpoint: &str, api_token: &str, ids: Vec<String>) ->
                                              Result<Vec<ZabbixHost>, Box<dyn std::error::Error>> {
         println!("find hosts by ids..");
         
@@ -39,8 +41,6 @@ pub mod hosts {
             auth: api_token.to_string(),
             id: 1
         };
-
-        let client = reqwest::blocking::Client::new();
 
         let request_body = serde_json::to_string(&request).unwrap();
 
