@@ -86,14 +86,14 @@ fn main() {
 
                                                                             match create_trigger(&client, &config.zabbix.api_endpoint, &token, &host.host, &url) {
                                                                                 Ok(_) => info!("trigger has been created"),
-                                                                                Err(_) => error!("error > unable to create trigger for url '{}'", url)
+                                                                                Err(_) => error!("unable to create trigger for url '{}'", url)
                                                                             }
 
                                                                         },
-                                                                        Err(_) => error!("error > unable to create web scenario for url '{}'", url)
+                                                                        Err(_) => error!("unable to create web scenario for url '{}'", url)
                                                                     }
                                                                 }
-                                                                None => error!("error > host wasn't found by id {}", item.hostid)
+                                                                None => error!("host wasn't found by id {}", item.hostid)
                                                             }
                                                         }
                                                     }
@@ -102,20 +102,20 @@ fn main() {
                                             }
 
                                         }
-                                        Err(_) => error!("error > unable to get hosts by ids")
+                                        Err(_) => error!("unable to get hosts by ids")
                                     }
                                 }
                                 Err(_) => error!("unable to get web scenarios")
                             }
                         }
-                        Err(_) => error!("error > unable to get zabbix items")
+                        Err(_) => error!("unable to get zabbix items")
                     }
 
                 },
 
-                Err(_) => error!("error. unable to login")
+                Err(_) => error!("unable to login")
             }
         }
-        Err(_) => error!("error > unable to load config from file")
+        Err(_) => error!("unable to load config from file")
     }
 }
