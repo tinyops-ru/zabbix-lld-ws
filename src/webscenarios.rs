@@ -6,8 +6,8 @@ pub mod webscenarios {
 
     use crate::errors::errors::OperationError;
     use crate::http::http::send_post_request;
-    use crate::types::types::OperationResult;
-    use crate::zabbix::zabbix::{CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON, JSONRPC, ZabbixRequest};
+    use crate::types::types::{EmptyResult, OperationResult};
+    use crate::zabbix::zabbix::ZabbixRequest;
 
     #[derive(Deserialize)]
     pub struct ZabbixWebScenario {
@@ -88,8 +88,7 @@ pub mod webscenarios {
 
     pub fn create_web_scenario(client: &reqwest::blocking::Client,
                                api_endpoint: &str, auth_token: &str,
-                               item_url: &str, host_id: &str) ->
-                                                            Result<(), Box<dyn std::error::Error>> {
+                               item_url: &str, host_id: &str) -> EmptyResult {
         println!("creating web scenario for '{}'", item_url);
 
         let mut search_params = HashMap::new();
@@ -104,36 +103,25 @@ pub mod webscenarios {
             no: 1
         };
 
-        let request = CreateRequest {
-            jsonrpc: JSONRPC.to_string(),
-            method: "httptest.create".to_string(),
-
-            params: CreateRequestParams {
-                name: scenario_name,
-                hostid: host_id.to_string(),
-                steps: vec![step]
-            },
-            auth: auth_token.to_string(),
-            id: 1
+        let params = CreateRequestParams {
+            name: scenario_name,
+            hostid: host_id.to_string(),
+            steps: vec![step]
         };
 
-        let request_body = serde_json::to_string(&request).unwrap();
+        let request: ZabbixRequest<CreateRequestParams> = ZabbixRequest::new(
+            "httptest.create", params, auth_token
+        );
 
-        let response = client.post(api_endpoint)
-            .body(request_body)
-            .header(CONTENT_TYPE_HEADER, CONTENT_TYPE_JSON)
-            .send()?;
-
-        let response_status = response.status();
-        let response_text = response.text().unwrap();
-
-        println!("{}", response_text);
-
-        if response_status != reqwest::StatusCode::OK {
-            println!("{}", response_text);
-            panic!("unexpected server response code {}", response_status)
+        match send_post_request(client, api_endpoint, request) {
+            Ok(_) => {
+                info!("web scenario has been created for '{}'", item_url);
+                Ok(())
+            }
+            Err(_) => {
+                error!("unable to create web scenario for '{}'", item_url);
+                Err(OperationError::Error)
+            }
         }
-
-        Ok(())
     }
 }
