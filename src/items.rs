@@ -8,7 +8,7 @@ pub mod items {
     use crate::http::http::send_post_request;
     use crate::types::types::OperationResult;
     use crate::zabbix::zabbix;
-    use crate::zabbix::zabbix::ZabbixRequest;
+    use crate::zabbix::zabbix::{log_zabbix_error, ZabbixError, ZabbixRequest};
 
     #[derive(Serialize)]
     struct ItemSearchParams {
@@ -18,7 +18,8 @@ pub mod items {
 
     #[derive(Deserialize)]
     struct ItemSearchResponse {
-        result: Vec<ZabbixItem>
+        result: Option<Vec<ZabbixItem>>,
+        error: Option<ZabbixError>
     }
 
     #[derive(Deserialize)]
@@ -51,7 +52,14 @@ pub mod items {
                 let search_response: ItemSearchResponse = serde_json::from_str(&response)
                                                 .expect(zabbix::UNSUPPORTED_RESPONSE_MESSAGE);
 
-                Ok(search_response.result)
+                match search_response.result {
+                    Some(items) => Ok(items),
+                    None => {
+                        error!("unable to find zabbix items");
+                        log_zabbix_error(search_response.error);
+                        Err(OperationError::Error)
+                    }
+                }
             }
             Err(_) => {
                 error!("unable to find zabbix items");

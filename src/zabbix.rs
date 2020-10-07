@@ -1,4 +1,5 @@
 pub mod zabbix {
+    use serde::Deserialize;
     use serde::Serialize;
 
     pub const JSONRPC: &str = "2.0";
@@ -23,6 +24,24 @@ pub mod zabbix {
                 auth: auth_token.to_string(),
                 id: 1
             }
+        }
+    }
+
+    #[derive(Deserialize)]
+    pub struct ZabbixError {
+        pub code: i32,
+        pub message: String,
+        pub data: String
+    }
+
+    pub fn log_zabbix_error(zabbix_error: Option<ZabbixError>) {
+        match zabbix_error {
+            Some(error) => {
+                error!("error {}", error.code);
+                error!("- message: '{}'", error.message);
+                error!("- data: '{}'", error.data);
+            }
+            None => {}
         }
     }
 }
