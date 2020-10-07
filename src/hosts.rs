@@ -25,8 +25,8 @@ pub mod hosts {
     }
 
     pub fn find_hosts(client: &reqwest::blocking::Client,
-                      api_endpoint: &str, api_token: &str, ids: Vec<String>) ->
-                                                                OperationResult<Vec<ZabbixHost>> {
+                      api_endpoint: &str, api_token: &str,
+                      ids: Vec<String>) -> OperationResult<Vec<ZabbixHost>> {
         info!("find hosts by ids..");
 
         let params = SearchRequestParams { hostids: ids };
