@@ -60,6 +60,7 @@ pub mod webscenarios {
             Ok(response) => {
                 let search_response: WebScenariosResponse = serde_json::from_str(&response)
                                             .expect(zabbix::UNSUPPORTED_RESPONSE_MESSAGE);
+                debug!("web scenarios found: {}", search_response.result.len());
                 Ok(search_response.result)
             }
             Err(_) => {
@@ -73,6 +74,7 @@ pub mod webscenarios {
                                api_endpoint: &str, auth_token: &str,
                                item_url: &str, host_id: &str) -> EmptyResult {
         info!("creating web scenario for '{}'", item_url);
+        debug!("host-id: '{}'", host_id);
 
         let mut search_params = HashMap::new();
         search_params.insert("key_".to_string(), "Check index page '".to_string());
