@@ -27,6 +27,7 @@ pub mod logging {
             .appender(get_file_appender_definition(level))
             .logger(get_default_logger(level))
             .logger(Logger::builder().build("hyper", LevelFilter::Info))
+            .logger(Logger::builder().build("http", LevelFilter::Info))
             .build(
             Root::builder()
                 .appender(FILE_APPENDER_NAME)
