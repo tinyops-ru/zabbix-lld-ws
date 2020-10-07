@@ -56,7 +56,7 @@ pub mod items {
                     Some(items) => Ok(items),
                     None => {
                         error!("unable to find zabbix items");
-                        log_zabbix_error(search_response.error);
+                        log_zabbix_error(&search_response.error);
                         Err(OperationError::Error)
                     }
                 }

@@ -34,7 +34,7 @@ pub mod zabbix {
         pub data: String
     }
 
-    pub fn log_zabbix_error(zabbix_error: Option<ZabbixError>) {
+    pub fn log_zabbix_error(zabbix_error: &Option<ZabbixError>) {
         match zabbix_error {
             Some(error) => {
                 error!("error {}", error.code);
