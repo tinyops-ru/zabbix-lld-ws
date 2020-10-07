@@ -6,7 +6,7 @@ pub mod hosts {
     use crate::http::http::send_post_request;
     use crate::types::types::OperationResult;
     use crate::zabbix::zabbix;
-    use crate::zabbix::zabbix::ZabbixRequest;
+    use crate::zabbix::zabbix::{log_zabbix_error, ZabbixError, ZabbixRequest};
 
     #[derive(Serialize)]
     struct SearchRequestParams {
@@ -15,7 +15,8 @@ pub mod hosts {
 
     #[derive(Deserialize)]
     struct SearchResponse {
-        result: Vec<ZabbixHost>
+        result: Option<Vec<ZabbixHost>>,
+        error: Option<ZabbixError>
     }
 
     #[derive(Deserialize)]
@@ -39,7 +40,15 @@ pub mod hosts {
             Ok(response) => {
                 let search_response: SearchResponse = serde_json::from_str(&response)
                                                 .expect(zabbix::UNSUPPORTED_RESPONSE_MESSAGE);
-                Ok(search_response.result)
+
+                match search_response.result {
+                    Some(hosts) => Ok(hosts),
+                    None => {
+                        log_zabbix_error(&search_response.error);
+                        error!("unable to find zabbix hosts");
+                        Err(OperationError::Error)
+                    }
+                }
             }
             Err(_) => {
                 error!("unable to find zabbix hosts");
