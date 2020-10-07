@@ -37,6 +37,8 @@ mod errors;
 mod http;
 
 const GENERATE_COMMAND: &str = "gen";
+const ITEM_KEY_SEARCH_MASK_ARG: &str = "item-key-starts-with";
+const ITEM_KEY_SEARCH_MASK_DEFAULT_VALUE: &str = "vhost.item";
 
 const WORK_DIR_ARGUMENT: &str = "work-dir";
 
@@ -47,7 +49,7 @@ const ERROR_EXIT_CODE: i32 = 1;
 
 fn main() {
     let matches = App::new("WSZL tool")
-        .version("0.3.0")
+        .version("0.4.0")
         .author("Eugene Lebedev <duke.tougu@gmail.com>")
         .about("Add Web scenarios support for Zabbix Low Level Discovery")
         .arg(
@@ -66,6 +68,14 @@ fn main() {
         )
         .subcommand(SubCommand::with_name(GENERATE_COMMAND)
             .about("generate web scenarios and triggers for zabbix items")
+            .arg(
+                Arg::with_name(ITEM_KEY_SEARCH_MASK_ARG)
+                    .short(ITEM_KEY_SEARCH_MASK_ARG)
+                    .help("set search mask for items.")
+                    .default_value(ITEM_KEY_SEARCH_MASK_DEFAULT_VALUE)
+                    .long(ITEM_KEY_SEARCH_MASK_ARG).takes_value(true)
+                    .required(false)
+            )
         )
         .get_matches();
 
@@ -84,15 +94,23 @@ fn main() {
     let logging_config = get_logging_config(logging_level);
     log4rs::init_config(logging_config).unwrap();
 
+
+    let mut matched_command = false;
+
     match matches.subcommand_matches(GENERATE_COMMAND) {
         Some(_) => {
+            matched_command = true;
             let config_file_path = Path::new("wszl.yml");
 
             match load_config_from_file(config_file_path) {
                 Ok(config) => {
                     let client = reqwest::blocking::Client::new();
 
-                    match create_web_scenarios_and_triggers(&client, &config.zabbix) {
+                    let item_key_search_mask: &str = if matches.is_present(ITEM_KEY_SEARCH_MASK_ARG) {
+                        matches.value_of(ITEM_KEY_SEARCH_MASK_ARG).unwrap()
+                    } else { ITEM_KEY_SEARCH_MASK_DEFAULT_VALUE };
+
+                    match create_web_scenarios_and_triggers(&client, &config.zabbix, &item_key_search_mask) {
                         Ok(_) => info!("web scenarios and triggers have been created"),
                         Err(_) => exit(ERROR_EXIT_CODE)
                     }
@@ -102,21 +120,30 @@ fn main() {
         }
         None => {}
     }
+
+    if !matched_command {
+        matches.usage();
+    }
 }
 
-fn create_web_scenarios_and_triggers(client: &Client, zabbix_config: &ZabbixConfig) -> EmptyResult {
+fn create_web_scenarios_and_triggers(client: &Client, zabbix_config: &ZabbixConfig,
+                                     item_key_search_mask: &str) -> EmptyResult {
     match login_to_zabbix_api(&client, &zabbix_config.api_endpoint,
                               &zabbix_config.username, &zabbix_config.password) {
         Ok(auth_token) => {
             debug!("login success: token '{}'", auth_token);
 
-            match find_zabbix_objects(client, zabbix_config, &auth_token) {
+            match find_zabbix_objects(client, zabbix_config, &auth_token, &item_key_search_mask) {
                 Ok(zabbix_objects) => {
-                    let url_pattern = Regex::new("^vhost.item\\[(.*)\\]$").unwrap();
+                    let pattern_start = "^".to_string() + item_key_search_mask;
+                    let pattern = pattern_start + "\\[(.*)\\]$";
+
+                    let url_pattern = Regex::new(&pattern).unwrap();
 
                     let mut has_errors = false;
 
                     for item in &zabbix_objects.items {
+                        debug!("item '{}'", item.name);
 
                         match create_scenario_and_trigger_for_item(zabbix_config, &auth_token,
                                         client, &url_pattern, &zabbix_objects, item) {
@@ -146,9 +173,11 @@ fn create_web_scenarios_and_triggers(client: &Client, zabbix_config: &ZabbixConf
     }
 }
 
-fn find_zabbix_objects(client: &Client, zabbix_config: &ZabbixConfig, auth_token: &str) ->
-                                                                    OperationResult<ZabbixObjects> {
-    match find_zabbix_items(&client, &zabbix_config.api_endpoint, &auth_token) {
+fn find_zabbix_objects(client: &Client, zabbix_config: &ZabbixConfig,
+                       auth_token: &str, item_key_search_mask: &str) ->
+                                                                OperationResult<ZabbixObjects> {
+    match find_zabbix_items(&client, &zabbix_config.api_endpoint,
+                            &auth_token, item_key_search_mask) {
         Ok(items) => {
             debug!("received items:");
 
