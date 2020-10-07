@@ -9,7 +9,7 @@ pub mod http {
 
     pub fn send_post_request<T: Serialize>(client: &reqwest::blocking::Client,
                                 url: &str, request: T) -> StringResult {
-        info!("send post request to '{}'", url);
+        debug!("send post request to '{}'", url);
 
         let request_body = serde_json::to_string(&request).unwrap();
 
