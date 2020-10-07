@@ -8,7 +8,7 @@ pub mod webscenarios {
     use crate::http::http::send_post_request;
     use crate::types::types::{EmptyResult, OperationResult};
     use crate::zabbix::zabbix;
-    use crate::zabbix::zabbix::ZabbixRequest;
+    use crate::zabbix::zabbix::{log_zabbix_error, ZabbixError, ZabbixRequest};
 
     #[derive(Deserialize)]
     pub struct ZabbixWebScenario {
@@ -22,7 +22,8 @@ pub mod webscenarios {
 
     #[derive(Deserialize)]
     struct WebScenariosResponse {
-        result: Vec<ZabbixWebScenario>
+        result: Option<Vec<ZabbixWebScenario>>,
+        error: Option<ZabbixError>
     }
 
     #[derive(Serialize)]
@@ -60,11 +61,20 @@ pub mod webscenarios {
             Ok(response) => {
                 let search_response: WebScenariosResponse = serde_json::from_str(&response)
                                             .expect(zabbix::UNSUPPORTED_RESPONSE_MESSAGE);
-                debug!("web scenarios found: {}", search_response.result.len());
-                Ok(search_response.result)
+                match search_response.result {
+                    Some(web_scenarios) => {
+                        debug!("web scenarios found: {}", web_scenarios.len());
+                        Ok(web_scenarios)
+                    },
+                    None => {
+                        log_zabbix_error(&search_response.error);
+                        error!("unable to find zabbix web scenarios");
+                        Err(OperationError::Error)
+                    }
+                }
             }
             Err(_) => {
-                error!("unable to find zabbix items");
+                error!("unable to find zabbix web scenarios");
                 Err(OperationError::Error)
             }
         }
