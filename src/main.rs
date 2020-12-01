@@ -128,8 +128,8 @@ fn main() {
 
 fn create_web_scenarios_and_triggers(client: &Client, zabbix_config: &ZabbixConfig,
                                      item_key_search_mask: &str) -> EmptyResult {
-    match login_to_zabbix_api(&client, &zabbix_config.api_endpoint,
-                              &zabbix_config.username, &zabbix_config.password) {
+    match login_to_zabbix_api(&client, &zabbix_config.api.endpoint,
+                              &zabbix_config.api.username, &zabbix_config.api.password) {
         Ok(auth_token) => {
             debug!("login success: token '{}'", auth_token);
 
@@ -176,19 +176,19 @@ fn create_web_scenarios_and_triggers(client: &Client, zabbix_config: &ZabbixConf
 fn find_zabbix_objects(client: &Client, zabbix_config: &ZabbixConfig,
                        auth_token: &str, item_key_search_mask: &str) ->
                                                                 OperationResult<ZabbixObjects> {
-    match find_zabbix_items(&client, &zabbix_config.api_endpoint,
+    match find_zabbix_items(&client, &zabbix_config.api.endpoint,
                             &auth_token, item_key_search_mask) {
         Ok(items) => {
             debug!("received items:");
 
-            match find_web_scenarios(&client, &zabbix_config.api_endpoint, &auth_token) {
+            match find_web_scenarios(&client, &zabbix_config.api.endpoint, &auth_token) {
                 Ok(web_scenarios) => {
                     debug!("web scenarios have been obtained");
 
                     let host_ids: Vec<String> = items.iter()
                                     .map(|item| item.hostid.to_string()).collect();
 
-                    match find_hosts(&client, &zabbix_config.api_endpoint, &auth_token, host_ids) {
+                    match find_hosts(&client, &zabbix_config.api.endpoint, &auth_token, host_ids) {
                         Ok(hosts) => {
 
                             Ok(
@@ -242,11 +242,11 @@ fn create_scenario_and_trigger_for_item(zabbix_config: &ZabbixConfig,
 
                 match zabbix_objects.hosts.iter().find(|host| host.hostid == zabbix_item.hostid) {
                     Some(host) => {
-                        match create_web_scenario(&client, &zabbix_config.api_endpoint, &auth_token, &url, &host.hostid) {
+                        match create_web_scenario(&client, &zabbix_config.api.endpoint, &auth_token, &url, &host.hostid) {
                             Ok(_) => {
                                 info!("web scenario has been created for '{}'", url);
 
-                                match create_trigger(&client, &zabbix_config.api_endpoint, &auth_token, &host.host, &url) {
+                                match create_trigger(&client, &zabbix_config.api.endpoint, &auth_token, &host.host, &url) {
                                     Ok(_) => info!("trigger has been created"),
                                     Err(_) => {
                                         error!("unable to create trigger for url '{}'", url);

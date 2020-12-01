@@ -12,9 +12,22 @@ pub mod config {
     }
 
     pub struct ZabbixConfig {
-        pub api_endpoint: String,
+        pub api: ZabbixApiConfig,
+        pub scenario: WebScenarioConfig
+    }
+
+    pub struct ZabbixApiConfig {
+        pub endpoint: String,
         pub username: String,
         pub password: String
+    }
+
+    pub struct WebScenarioConfig {
+        pub response_timeout: String,
+        pub expected_status_code: String,
+        pub attempts: String,
+        pub update_interval: String,
+        pub application: String
     }
 
     pub fn load_config_from_file(file_path: &Path) -> OperationResult<Config> {
@@ -27,21 +40,51 @@ pub mod config {
                 let config = &configs[0];
 
                 let zabbix_config = &config["zabbix"];
-                let api_endpoint = zabbix_config["api-endpoint"].as_str()
-                                               .expect("property 'api-endpoint' wasn't found");
-                let username = zabbix_config["username"].as_str()
+
+                let zabbix_api_config = &zabbix_config["api"];
+
+                let api_endpoint = zabbix_api_config["endpoint"].as_str()
+                                               .expect("property 'endpoint' wasn't found");
+                let username = zabbix_api_config["username"].as_str()
                                                .expect("property 'username' wasn't found");
-                let password = zabbix_config["password"].as_str()
+                let password = zabbix_api_config["password"].as_str()
                                                .expect("property 'password' wasn't found");
+
+                let web_scenario_config = &zabbix_config["scenario"];
+
+                let response_timeout = web_scenario_config["response-timeout"].as_str()
+                                        .expect("property 'response-timeout' wasn't found");
+
+                let expected_status_code = web_scenario_config["expected-status-code"].as_str()
+                                            .expect("property 'expected-status-code' wasn't found");
+
+                let attempts = web_scenario_config["attempts"].as_str()
+                    .expect("property 'attempts' wasn't found");
+
+                let update_interval = web_scenario_config["update-interval"].as_str()
+                    .expect("property 'update-interval' wasn't found");
+
+                let application_name = web_scenario_config["application"].as_str()
+                    .expect("property 'application' wasn't found");
+
 
                 info!("config has been loaded");
 
                 Ok(
                     Config {
                         zabbix: ZabbixConfig {
-                            api_endpoint: api_endpoint.to_string(),
-                            username: username.to_string(),
-                            password: password.to_string()
+                            api: ZabbixApiConfig {
+                                endpoint: api_endpoint.to_string(),
+                                username: username.to_string(),
+                                password: password.to_string()
+                            },
+                            scenario: WebScenarioConfig {
+                                response_timeout: response_timeout.to_string(),
+                                expected_status_code: expected_status_code.to_string(),
+                                attempts: attempts.to_string(),
+                                update_interval: update_interval.to_string(),
+                                application: application_name.to_string()
+                            }
                         }
                     }
                 )
