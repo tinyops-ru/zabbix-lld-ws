@@ -7,6 +7,5 @@ zabbix:
   scenario:
     response-timeout: "15s"
     expected-status-code: "200"
-    attempts: "3"
+    attempts: 3
     update-interval: "5m"
-    application: "SITE"

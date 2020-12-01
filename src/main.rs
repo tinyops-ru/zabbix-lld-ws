@@ -242,7 +242,7 @@ fn create_scenario_and_trigger_for_item(zabbix_config: &ZabbixConfig,
 
                 match zabbix_objects.hosts.iter().find(|host| host.hostid == zabbix_item.hostid) {
                     Some(host) => {
-                        match create_web_scenario(&client, &zabbix_config.api.endpoint, &auth_token, &url, &host.hostid) {
+                        match create_web_scenario(&client, &zabbix_config.api.endpoint, &auth_token, &zabbix_config.scenario, &url, &host.hostid) {
                             Ok(_) => {
                                 info!("web scenario has been created for '{}'", url);
 

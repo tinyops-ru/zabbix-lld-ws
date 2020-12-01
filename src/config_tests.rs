@@ -16,9 +16,8 @@ mod config_tests {
 
                 assert_eq!(config.zabbix.scenario.response_timeout, "15s");
                 assert_eq!(config.zabbix.scenario.expected_status_code, "200");
-                assert_eq!(config.zabbix.scenario.attempts, "3");
+                assert_eq!(config.zabbix.scenario.attempts, 3);
                 assert_eq!(config.zabbix.scenario.update_interval, "5m");
-                assert_eq!(config.zabbix.scenario.application, "SITE");
             }
             Err(_) => panic!("config should be loaded")
         }

@@ -9,6 +9,7 @@ pub mod webscenarios {
     use crate::types::types::{EmptyResult, OperationResult};
     use crate::zabbix::zabbix;
     use crate::zabbix::zabbix::{log_zabbix_error, ZabbixError, ZabbixRequest};
+    use crate::config::config::{WebScenarioConfig};
 
     #[derive(Deserialize)]
     pub struct ZabbixWebScenario {
@@ -30,7 +31,9 @@ pub mod webscenarios {
     struct CreateRequestParams {
         name: String,
         hostid: String,
-        steps: Vec<WebScenarioStep>
+        steps: Vec<WebScenarioStep>,
+        delay: String,
+        retries: u8
     }
 
     #[derive(Serialize)]
@@ -82,6 +85,7 @@ pub mod webscenarios {
 
     pub fn create_web_scenario(client: &reqwest::blocking::Client,
                                api_endpoint: &str, auth_token: &str,
+                               scenario_config: &WebScenarioConfig,
                                item_url: &str, host_id: &str) -> EmptyResult {
         info!("creating web scenario for '{}'", item_url);
         debug!("host-id: '{}'", host_id);
@@ -94,15 +98,18 @@ pub mod webscenarios {
         let step = WebScenarioStep {
             name: "Get page".to_string(),
             url: item_url.to_string(),
-            status_codes: "200".to_string(),
+            status_codes: scenario_config.expected_status_code.to_string(),
             no: 1
         };
 
         let params = CreateRequestParams {
             name: scenario_name,
             hostid: host_id.to_string(),
-            steps: vec![step]
+            delay: scenario_config.update_interval.to_string(),
+            retries: scenario_config.attempts,
+            steps: vec![step],
         };
+
 
         let request: ZabbixRequest<CreateRequestParams> = ZabbixRequest::new(
             "httptest.create", params, auth_token

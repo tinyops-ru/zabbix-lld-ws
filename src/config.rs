@@ -25,9 +25,8 @@ pub mod config {
     pub struct WebScenarioConfig {
         pub response_timeout: String,
         pub expected_status_code: String,
-        pub attempts: String,
-        pub update_interval: String,
-        pub application: String
+        pub attempts: u8,
+        pub update_interval: String
     }
 
     pub fn load_config_from_file(file_path: &Path) -> OperationResult<Config> {
@@ -58,15 +57,11 @@ pub mod config {
                 let expected_status_code = web_scenario_config["expected-status-code"].as_str()
                                             .expect("property 'expected-status-code' wasn't found");
 
-                let attempts = web_scenario_config["attempts"].as_str()
+                let attempts = web_scenario_config["attempts"].as_i64()
                     .expect("property 'attempts' wasn't found");
 
                 let update_interval = web_scenario_config["update-interval"].as_str()
                     .expect("property 'update-interval' wasn't found");
-
-                let application_name = web_scenario_config["application"].as_str()
-                    .expect("property 'application' wasn't found");
-
 
                 info!("config has been loaded");
 
@@ -81,9 +76,8 @@ pub mod config {
                             scenario: WebScenarioConfig {
                                 response_timeout: response_timeout.to_string(),
                                 expected_status_code: expected_status_code.to_string(),
-                                attempts: attempts.to_string(),
-                                update_interval: update_interval.to_string(),
-                                application: application_name.to_string()
+                                attempts: attempts as u8,
+                                update_interval: update_interval.to_string()
                             }
                         }
                     }
