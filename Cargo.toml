@@ -1,6 +1,6 @@
 [package]
 name = "zabbix-lld-ws"
-version = "0.5.0"
+version = "0.5.1"
 authors = ["Eugene Lebedev <duke.tougu@gmail.com>"]
 edition = "2018"
 
