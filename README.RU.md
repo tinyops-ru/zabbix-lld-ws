@@ -1,6 +1,6 @@
 # WSZL
 
-Добавляет поддержку Web-сценариев для механизма Zabbix [Low Level Discovery](https://www.zabbix.com/documentation/current/manual/discovery/low_level_discovery).
+Добавляет поддержку Web-сценариев для механизма [Zabbix Low Level Discovery](https://www.zabbix.com/documentation/current/manual/discovery/low_level_discovery).
 
 ## С чего начать
 
@@ -10,22 +10,22 @@
    Она обеспечивает низкоуровневое обнаружение для виртуальных хостов из nginx\apache.
 2. Скопируйте исполняемый файл `wszl` в `/etc/zabbix` на Zabbix-сервере
 3. Установите право на исполнение:
-    ```shell script
+    ```bash
     chmod +x /etc/zabbix/wszl
     ```
 4. Создайте файл конфигурации `/etc/zabbix/wszl.yml`:
-    ```shell script
+    ```bash
     cp wszl.yml-example /etc/zabbix/wszl.yml
     ```
     Отредактируйте файл, укажите имя пользователя и пароль для доступа к Zabbix API.
    
     Обновите права:
-    ```shell script
+    ```bash
     chmod o-rwx /etc/zabbix/wszl.yml
     chown zabbix: /etc/zabbix
     ```
     
-5. Добавьте задачу в планировщик cron:
+5. Добавьте задачу в планировщик cron (например, в файл `/var/spool/cron/zabbix`):
     Каждые 30 минут утилита будет создавать Web-сценарии и триггеры для обнаруженных элементов.
     ```
     */30 * * * * /etc/zabbix/wszl gen

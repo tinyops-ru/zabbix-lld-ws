@@ -3,7 +3,7 @@
 [Русская версия](README.RU.md)
 
 Add support Web Scenarios to 
-Zabbix [Low Level Discovery](https://www.zabbix.com/documentation/current/manual/discovery/low_level_discovery) feature.
+[Zabbix Low Level Discovery](https://www.zabbix.com/documentation/current/manual/discovery/low_level_discovery) feature.
 
 ## Getting started
 
@@ -13,11 +13,11 @@ Zabbix [Low Level Discovery](https://www.zabbix.com/documentation/current/manual
    It provides low level discovery for virtual hosts (nginx or apache).
 2. Copy `wszl` to `/etc/zabbix` on Zabbix server
 3. Set permissions:
-    ```shell script
+    ```bash
     chmod +x /etc/zabbix/wszl
     ```
 4. Create config file `/etc/zabbix/wszl.yml`:
-    ```shell script
+    ```bash
     cp wszl.yml-example /etc/zabbix/wszl.yml
     ```
    
@@ -27,7 +27,7 @@ Zabbix [Low Level Discovery](https://www.zabbix.com/documentation/current/manual
     chown zabbix: /etc/zabbix
     ```
     
-5. Add cron task:
+5. Add cron task (i.e. `/var/spool/cron/zabbix`):
     ```
     */30 * * * * /etc/zabbix/wszl gen
     ```   
