@@ -6,8 +6,7 @@
 
 ### Установка
 
-1. Установите утилиту [site discovery flea](https://github.com/lebe-dev/site-discovery-flea)  
-   Она обеспечивает низкоуровневое обнаружение для виртуальных хостов из nginx\apache.
+1. Установите утилиту [vhdt](https://github.com/lebe-dev/vhost-discovery-tool) для низкоуровневого обнаружения виртуальных хостов из nginx\apache.
 2. Скопируйте исполняемый файл `wszl` в `/etc/zabbix` на Zabbix-сервере
 3. Установите право на исполнение:
     ```bash

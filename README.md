@@ -9,8 +9,7 @@ Add support Web Scenarios to
 
 ### Installation
 
-1. Setup [site discovery flea](https://github.com/lebe-dev/site-discovery-flea)  
-   It provides low level discovery for virtual hosts (nginx or apache).
+1. Install [vhdt](https://github.com/lebe-dev/vhost-discovery-tool) for virtual hosts low level discovery (nginx or apache).
 2. Copy `wszl` to `/etc/zabbix` on Zabbix server
 3. Set permissions:
     ```bash
