@@ -54,7 +54,7 @@ pub mod config {
                 let response_timeout = web_scenario_config["response-timeout"].as_str()
                                         .expect("property 'response-timeout' wasn't found");
 
-                let expected_status_code = web_scenario_config["expected-status-code"].as_str()
+                let expected_status_code = web_scenario_config["expect-status-code"].as_str()
                                             .expect("property 'expected-status-code' wasn't found");
 
                 let attempts = web_scenario_config["attempts"].as_i64()
