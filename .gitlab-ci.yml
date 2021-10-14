@@ -1,0 +1,30 @@
+stages:
+  - build
+
+build:
+  stage: build
+
+  only:
+    - main
+
+  script:
+    - cargo test
+    - cargo build --release
+    - cp target/release/zabbix-lld-ws wszl
+    - eu-elfcompress wszl
+    - strip wszl
+    - upx -9 --lzma wszl
+
+  artifacts:
+    name: wszl
+    paths:
+      - wszl
+      - README.md
+      - README.RU.md
+      - files
+    expire_in: 1 week
+
+  tags:
+    - build
+    - rust
+    - centos
