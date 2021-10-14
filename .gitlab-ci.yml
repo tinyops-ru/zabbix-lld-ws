@@ -21,7 +21,7 @@ build:
       - wszl
       - README.md
       - README.RU.md
-      - files
+      - wszl.yml-example
     expire_in: 1 week
 
   tags:
