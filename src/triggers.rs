@@ -26,11 +26,7 @@ pub mod triggers {
                           host: &str, url: &str) -> EmptyResult {
         debug!("create trigger for '{}', url '{}'", host, url);
 
-        let expression_body = format!("{}:web.test.fail[Check index page '{}'].last()", host, url);
-
-        let expression_with_bracket = "{".to_string() + &expression_body;
-
-        let expression = expression_with_bracket + "}<>0";
+        let expression = format!("last(/{}/web.test.fail[Check index page '{}'])<>0", host, url);
 
         let trigger_name = format!("Site '{}' is unavailable", url);
 
