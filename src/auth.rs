@@ -18,7 +18,7 @@ pub mod auth {
 
     #[derive(Serialize)]
     struct RequestParams {
-        user: String,
+        username: String,
         password: String
     }
 
@@ -33,7 +33,7 @@ pub mod auth {
             jsonrpc: JSONRPC.to_string(),
             method: "user.login".to_string(),
             params: RequestParams {
-                user: username.to_string(), password: password.to_string()
+                username: username.to_string(), password: password.to_string()
             },
             id: 1,
             auth: None
