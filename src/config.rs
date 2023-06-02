@@ -13,11 +13,23 @@ pub struct AppConfig {
     pub zabbix: ZabbixConfig
 }
 
+impl Display for AppConfig {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.zabbix)
+    }
+}
+
 #[derive(PartialEq, Deserialize, Clone, Debug)]
 #[serde(rename_all = "kebab-case")]
 pub struct ZabbixConfig {
     pub api: ZabbixApiConfig,
     pub scenario: WebScenarioConfig
+}
+
+impl Display for ZabbixConfig {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "api: '{}', scenario: '{}'", self.api, self.scenario)
+    }
 }
 
 #[derive(PartialEq, Deserialize, Clone, Debug)]
@@ -30,7 +42,10 @@ pub struct ZabbixApiConfig {
 
 impl Display for ZabbixApiConfig {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "endpoint: '{}', username: '{}', password: '*********'", self.endpoint, self.username)
+        write!(
+            f, "endpoint: '{}', username: '{}', password: '*********'",
+            self.endpoint, self.username
+        )
     }
 }
 
@@ -43,10 +58,18 @@ pub struct WebScenarioConfig {
     pub update_interval: String
 }
 
-pub fn load_config_from_file(file_path: &Path) -> OperationResult<AppConfig> {
-    info!("loading config from file '{}'", file_path.display());
+impl Display for WebScenarioConfig {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f, "response-timeout: '{}', expect-status-code: '{}, attempts: {}, update-interval: '{}'",
+            self.response_timeout, self.expect_status_code, self.attempts, self.update_interval
+        )
+    }
+}
 
+pub fn load_config_from_file(file_path: &Path) -> OperationResult<AppConfig> {
     let file_path_str = format!("{}", file_path.display());
+    info!("loading config from file '{file_path_str}'");
 
     let settings = Config::builder()
         .add_source(config::File::with_name(&file_path_str))
@@ -54,6 +77,8 @@ pub fn load_config_from_file(file_path: &Path) -> OperationResult<AppConfig> {
         .unwrap();
 
     let config = settings.try_deserialize::<AppConfig>().unwrap();
+
+    info!("config loaded: {}", config);
 
     Ok(config)
 }
