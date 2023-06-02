@@ -10,20 +10,19 @@ use clap::{App, Arg, SubCommand};
 use regex::Regex;
 use reqwest::blocking::Client;
 
-use crate::auth::auth::login_to_zabbix_api;
-use crate::config::config::{load_config_from_file, ZabbixConfig};
-use crate::errors::errors::OperationError;
-use crate::hosts::hosts::{find_hosts, ZabbixHost};
-use crate::items::items::{find_zabbix_items, ZabbixItem};
-use crate::logging::logging::get_logging_config;
-use crate::triggers::triggers::create_trigger;
-use crate::types::types::{EmptyResult, OperationResult};
-use crate::webscenarios::webscenarios::{create_web_scenario, find_web_scenarios, ZabbixWebScenario};
+use crate::auth::login_to_zabbix_api;
+use crate::config::{load_config_from_file, ZabbixConfig};
+use crate::errors::OperationError;
+use crate::hosts::{find_hosts, ZabbixHost};
+use crate::items::{find_zabbix_items, ZabbixItem};
+use crate::logging::get_logging_config;
+use crate::triggers::create_trigger;
+use crate::types::{EmptyResult, OperationResult};
+use crate::webscenarios::{create_web_scenario, find_web_scenarios, ZabbixWebScenario};
 
 mod types;
 
 mod config;
-mod config_tests;
 
 mod zabbix;
 mod auth;
