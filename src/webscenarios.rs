@@ -96,7 +96,7 @@ pub fn create_web_scenario(client: &reqwest::blocking::Client,
     let step = WebScenarioStep {
         name: "Get page".to_string(),
         url: item_url.to_string(),
-        status_codes: scenario_config.expected_status_code.to_string(),
+        status_codes: scenario_config.expect_status_code.to_string(),
         no: 1
     };
 

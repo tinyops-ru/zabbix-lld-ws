@@ -1,99 +1,68 @@
-use std::fs;
+use std::fmt::{Display, Formatter};
 use std::path::Path;
 
-use yaml_rust::YamlLoader;
+use serde::Deserialize;
 
-use crate::errors::OperationError;
+use config::Config;
+
 use crate::types::OperationResult;
 
-pub struct Config {
+#[derive(PartialEq, Deserialize, Clone, Debug)]
+#[serde(rename_all = "kebab-case")]
+pub struct AppConfig {
     pub zabbix: ZabbixConfig
 }
 
+#[derive(PartialEq, Deserialize, Clone, Debug)]
+#[serde(rename_all = "kebab-case")]
 pub struct ZabbixConfig {
     pub api: ZabbixApiConfig,
     pub scenario: WebScenarioConfig
 }
 
+#[derive(PartialEq, Deserialize, Clone, Debug)]
+#[serde(rename_all = "kebab-case")]
 pub struct ZabbixApiConfig {
     pub endpoint: String,
     pub username: String,
     pub password: String
 }
 
+impl Display for ZabbixApiConfig {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "endpoint: '{}', username: '{}', password: '*********'", self.endpoint, self.username)
+    }
+}
+
+#[derive(PartialEq, Deserialize, Clone, Debug)]
+#[serde(rename_all = "kebab-case")]
 pub struct WebScenarioConfig {
     pub response_timeout: String,
-    pub expected_status_code: String,
+    pub expect_status_code: String,
     pub attempts: u8,
     pub update_interval: String
 }
 
-pub fn load_config_from_file(file_path: &Path) -> OperationResult<Config> {
+pub fn load_config_from_file(file_path: &Path) -> OperationResult<AppConfig> {
     info!("loading config from file '{}'", file_path.display());
 
-    let config_file_content = fs::read_to_string(file_path)?;
+    let file_path_str = format!("{}", file_path.display());
 
-    match YamlLoader::load_from_str(&config_file_content) {
-        Ok(configs) => {
-            let config = &configs[0];
+    let settings = Config::builder()
+        .add_source(config::File::with_name(&file_path_str))
+        .build()
+        .unwrap();
 
-            let zabbix_config = &config["zabbix"];
+    let config = settings.try_deserialize::<AppConfig>().unwrap();
 
-            let zabbix_api_config = &zabbix_config["api"];
-
-            let api_endpoint = zabbix_api_config["endpoint"].as_str()
-                .expect("property 'endpoint' wasn't found");
-            let username = zabbix_api_config["username"].as_str()
-                .expect("property 'username' wasn't found");
-            let password = zabbix_api_config["password"].as_str()
-                .expect("property 'password' wasn't found");
-
-            let web_scenario_config = &zabbix_config["scenario"];
-
-            let response_timeout = web_scenario_config["response-timeout"].as_str()
-                .expect("property 'response-timeout' wasn't found");
-
-            let expected_status_code = web_scenario_config["expect-status-code"].as_str()
-                .expect("property 'expected-status-code' wasn't found");
-
-            let attempts = web_scenario_config["attempts"].as_i64()
-                .expect("property 'attempts' wasn't found");
-
-            let update_interval = web_scenario_config["update-interval"].as_str()
-                .expect("property 'update-interval' wasn't found");
-
-            info!("config has been loaded");
-
-            Ok(
-                Config {
-                    zabbix: ZabbixConfig {
-                        api: ZabbixApiConfig {
-                            endpoint: api_endpoint.to_string(),
-                            username: username.to_string(),
-                            password: password.to_string()
-                        },
-                        scenario: WebScenarioConfig {
-                            response_timeout: response_timeout.to_string(),
-                            expected_status_code: expected_status_code.to_string(),
-                            attempts: attempts as u8,
-                            update_interval: update_interval.to_string()
-                        }
-                    }
-                }
-            )
-        }
-        Err(e) => {
-            error!("unable to load config from file: {}", e);
-            Err(OperationError::Error)
-        }
-    }
+    Ok(config)
 }
 
 #[cfg(test)]
 mod tests {
     use std::path::Path;
 
-    use crate::config::load_config_from_file;
+    use crate::config::{AppConfig, load_config_from_file, WebScenarioConfig, ZabbixApiConfig, ZabbixConfig};
 
     #[test]
     fn complete_config_should_be_loaded_from_file() {
@@ -101,14 +70,22 @@ mod tests {
 
         match load_config_from_file(file_path) {
             Ok(config) => {
-                assert_eq!(config.zabbix.api.endpoint, "http://zabbix/api_jsonrpc.php");
-                assert_eq!(config.zabbix.api.username, "abcd");
-                assert_eq!(config.zabbix.api.password, "0329jg02934jg34g");
+                let expected_config = AppConfig {
+                    zabbix: ZabbixConfig {
+                        api: ZabbixApiConfig {
+                            endpoint: "http://zabbix/api_jsonrpc.php".to_string(),
+                            username: "abcd".to_string(),
+                            password: "0329jg02934jg34g".to_string(),
+                        }, scenario: WebScenarioConfig {
+                            response_timeout: "15s".to_string(),
+                            expect_status_code: "200".to_string(),
+                            attempts: 3,
+                            update_interval: "5m".to_string(),
+                        }
+                    },
+                };
 
-                assert_eq!(config.zabbix.scenario.response_timeout, "15s");
-                assert_eq!(config.zabbix.scenario.expected_status_code, "200");
-                assert_eq!(config.zabbix.scenario.attempts, 3);
-                assert_eq!(config.zabbix.scenario.update_interval, "5m");
+                assert_eq!(config, expected_config);
             }
             Err(_) => panic!("config should be loaded")
         }
