@@ -1,7 +1,8 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-use crate::errors::OperationError;
+use anyhow::anyhow;
+
 use crate::http::send_post_request;
 use crate::types::OperationResult;
 use crate::zabbix::{log_zabbix_error, UNSUPPORTED_RESPONSE_MESSAGE, ZabbixError, ZabbixRequest};
@@ -44,13 +45,13 @@ pub fn find_hosts(client: &reqwest::blocking::Client,
                 None => {
                     log_zabbix_error(&search_response.error);
                     error!("unable to find zabbix hosts");
-                    Err(OperationError::Error)
+                    Err(anyhow!("unable to find zabbix hosts"))
                 }
             }
         }
         Err(_) => {
             error!("unable to find zabbix hosts");
-            Err(OperationError::Error)
+            Err(anyhow!("unable to find zabbix hosts"))
         }
     }
 }

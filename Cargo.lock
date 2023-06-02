@@ -1890,6 +1890,7 @@ dependencies = [
 name = "zabbix-lld-ws"
 version = "0.7.0"
 dependencies = [
+ "anyhow",
  "clap",
  "config",
  "log",
@@ -1899,5 +1900,4 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "thiserror",
 ]

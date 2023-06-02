@@ -3,13 +3,15 @@ use std::collections::HashMap;
 use serde::Deserialize;
 use serde::Serialize;
 
+use anyhow::anyhow;
+use anyhow::Context;
+
 use crate::config::WebScenarioConfig;
-use crate::errors::OperationError;
 use crate::http::send_post_request;
 use crate::types::{EmptyResult, OperationResult};
 use crate::zabbix::{log_zabbix_error, UNSUPPORTED_RESPONSE_MESSAGE, ZabbixError, ZabbixRequest};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct ZabbixWebScenario {
     pub name: String
 }
@@ -58,26 +60,17 @@ pub fn find_web_scenarios(client: &reqwest::blocking::Client,
         "httptest.get", params, auth_token
     );
 
-    match send_post_request(client, api_endpoint, request) {
-        Ok(response) => {
-            let search_response: WebScenariosResponse = serde_json::from_str(&response)
-                .expect(UNSUPPORTED_RESPONSE_MESSAGE);
-            match search_response.result {
-                Some(web_scenarios) => {
-                    debug!("web scenarios found: {}", web_scenarios.len());
-                    Ok(web_scenarios)
-                },
-                None => {
-                    log_zabbix_error(&search_response.error);
-                    error!("unable to find zabbix web scenarios");
-                    Err(OperationError::Error)
-                }
-            }
-        }
-        Err(_) => {
-            error!("unable to find zabbix web scenarios");
-            Err(OperationError::Error)
-        }
+    let response = send_post_request(client, api_endpoint, request).context("api communication error")?;
+
+    let search_response: WebScenariosResponse = serde_json::from_str(&response)
+        .context(UNSUPPORTED_RESPONSE_MESSAGE)?;
+
+    if let Some(web_scenarios) = search_response.result {
+        debug!("web scenarios found: {:?}", web_scenarios);
+        Ok(web_scenarios)
+
+    } else {
+      Err(anyhow!("unable to load web scenarios"))
     }
 }
 
@@ -85,6 +78,7 @@ pub fn create_web_scenario(client: &reqwest::blocking::Client,
                            api_endpoint: &str, auth_token: &str,
                            scenario_config: &WebScenarioConfig,
                            item_url: &str, host_id: &str) -> EmptyResult {
+
     info!("creating web scenario for '{item_url}'");
     debug!("host-id: '{host_id}'");
 
@@ -113,14 +107,8 @@ pub fn create_web_scenario(client: &reqwest::blocking::Client,
         "httptest.create", params, auth_token
     );
 
-    match send_post_request(client, api_endpoint, request) {
-        Ok(_) => {
-            info!("web scenario has been created for '{item_url}'");
-            Ok(())
-        }
-        Err(_) => {
-            error!("unable to create web scenario for '{item_url}'");
-            Err(OperationError::Error)
-        }
-    }
+    send_post_request(client, api_endpoint, request).context("unable to create web scenario")?;
+    info!("web scenario has been created for '{item_url}'");
+
+    Ok(())
 }

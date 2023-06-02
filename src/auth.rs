@@ -1,9 +1,10 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-use crate::errors::OperationError;
+use anyhow::Context;
+
 use crate::http::send_post_request;
-use crate::types::StringResult;
+use crate::types::OperationResult;
 use crate::zabbix::JSONRPC;
 
 #[derive(Serialize)]
@@ -27,7 +28,7 @@ struct AuthResponse {
 }
 
 pub fn login_to_zabbix_api(client: &reqwest::blocking::Client, api_endpoint: &str,
-                           username: &str, password: &str) -> StringResult {
+                           username: &str, password: &str) -> OperationResult<String> {
     let auth_request = AuthRequest {
         jsonrpc: JSONRPC.to_string(),
         method: "user.login".to_string(),
@@ -38,22 +39,11 @@ pub fn login_to_zabbix_api(client: &reqwest::blocking::Client, api_endpoint: &st
         auth: None
     };
 
-    match send_post_request(&client, api_endpoint, auth_request) {
-        Ok(response) => {
-            match serde_json::from_str::<AuthResponse>(&response) {
-                Ok(auth_response) => {
-                    debug!("auth token: {}", auth_response.result);
-                    Ok(String::from(auth_response.result))
-                }
-                Err(_) => {
-                    error!("unsupported auth response");
-                    Err(OperationError::Error)
-                }
-            }
-        }
-        Err(_) => {
-            error!("authentication error");
-            Err(OperationError::Error)
-        }
-    }
+    let response = send_post_request(&client, api_endpoint, auth_request)
+        .context("api communication error")?;
+
+    let auth_response = serde_json::from_str::<AuthResponse>(&response)
+        .context("authentication error")?;
+
+    Ok(String::from(auth_response.result))
 }

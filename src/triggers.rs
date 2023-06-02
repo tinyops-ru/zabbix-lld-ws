@@ -1,7 +1,9 @@
 use serde::Deserialize;
 use serde::Serialize;
 
-use crate::errors::OperationError;
+use anyhow::anyhow;
+use anyhow::Context;
+
 use crate::http::send_post_request;
 use crate::types::EmptyResult;
 use crate::zabbix::{log_zabbix_error, UNSUPPORTED_RESPONSE_MESSAGE, ZabbixError, ZabbixRequest};
@@ -22,7 +24,7 @@ struct CreateTriggerResponse {
 pub fn create_trigger(client: &reqwest::blocking::Client,
                       api_endpoint: &str, api_token: &str,
                       host: &str, url: &str) -> EmptyResult {
-    debug!("create trigger for '{host}', url '{url}'");
+    debug!("create trigger for host '{host}', url '{url}'");
 
     let expression_body = format!("{host}:web.test.fail[Check index page '{url}'].last()");
 
@@ -43,26 +45,22 @@ pub fn create_trigger(client: &reqwest::blocking::Client,
         "trigger.create", params, api_token
     );
 
-    match send_post_request(client, api_endpoint, request) {
-        Ok(response) => {
-            let create_response: CreateTriggerResponse = serde_json::from_str(&response)
-                .expect(UNSUPPORTED_RESPONSE_MESSAGE);
+    let response = send_post_request(client, api_endpoint, request)
+        .context("zabbix api communication error")?;
 
-            match create_response.error {
-                Some(_) => {
-                    log_zabbix_error(&create_response.error);
-                    error!("unable to create trigger for '{url}'");
-                    Err(OperationError::Error)
-                }
-                None => {
-                    info!("trigger has been created for url '{url}'");
-                    Ok(())
-                }
-            }
+    let create_response: CreateTriggerResponse = serde_json::from_str(&response)
+        .context(UNSUPPORTED_RESPONSE_MESSAGE)?;
+
+    match create_response.error {
+        Some(_) => {
+            log_zabbix_error(&create_response.error);
+            error!("unable to create trigger for '{url}'");
+            Err(anyhow!("unable to create trigger for url"))
         }
-        Err(_) => {
-            error!("unable to find zabbix items");
-            Err(OperationError::Error)
+        None => {
+            info!("trigger has been created for url '{url}'");
+            Ok(())
         }
     }
+
 }

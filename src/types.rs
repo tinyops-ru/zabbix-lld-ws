@@ -1,7 +1,5 @@
-use crate::errors::OperationError;
+use anyhow;
 
-pub type OperationResult<R> = Result<R, OperationError>;
+pub type OperationResult<R> = anyhow::Result<R>;
 
-pub type StringResult = Result<String, OperationError>;
-
-pub type EmptyResult = Result<(), OperationError>;
+pub type EmptyResult = anyhow::Result<()>;
