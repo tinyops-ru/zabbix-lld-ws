@@ -130,7 +130,8 @@ fn create_web_scenarios_and_triggers(client: &Client, zabbix_config: &ZabbixConf
     match login_to_zabbix_api(&client, &zabbix_config.api.endpoint,
                               &zabbix_config.api.username, &zabbix_config.api.password) {
         Ok(auth_token) => {
-            debug!("login success: token '{}'", auth_token);
+            let partial_auth_token = truncate(&auth_token, 4);
+            debug!("login success: token '{partial_auth_token}..'");
 
             match find_zabbix_objects(client, zabbix_config, &auth_token, &item_key_search_mask) {
                 Ok(zabbix_objects) => {
@@ -169,6 +170,13 @@ fn create_web_scenarios_and_triggers(client: &Client, zabbix_config: &ZabbixConf
             error!("unable to login");
             Err(OperationError::Error)
         }
+    }
+}
+
+fn truncate(s: &str, max_chars: usize) -> &str {
+    match s.char_indices().nth(max_chars) {
+        None => s,
+        Some((idx, _)) => &s[..idx],
     }
 }
 
@@ -230,31 +238,31 @@ fn create_scenario_and_trigger_for_item(zabbix_config: &ZabbixConfig,
     if url_pattern.is_match(&zabbix_item.key_) {
         let groups = url_pattern.captures_iter(&zabbix_item.key_).next().unwrap();
         let url = String::from(&groups[1]);
-        debug!("- url '{}'", url);
+        debug!("- url '{url}'");
 
-        let scenario_name = format!("Check index page '{}'", url);
+        let scenario_name = format!("Check index page '{url}'");
 
         match zabbix_objects.web_scenarios.iter().find(|entity| entity.name == scenario_name) {
-            Some(_) => debug!("web scenario has been found for url '{}', skip", url),
+            Some(_) => debug!("web scenario has been found for url '{url}', skip"),
             None => {
-                debug!("web scenario wasn't found for url '{}', creating..", url);
+                debug!("web scenario wasn't found for url '{url}', creating..");
 
                 match zabbix_objects.hosts.iter().find(|host| host.hostid == zabbix_item.hostid) {
                     Some(host) => {
                         match create_web_scenario(&client, &zabbix_config.api.endpoint, &auth_token, &zabbix_config.scenario, &url, &host.hostid) {
                             Ok(_) => {
-                                info!("web scenario has been created for '{}'", url);
+                                info!("web scenario has been created for '{url}'");
 
                                 match create_trigger(&client, &zabbix_config.api.endpoint, &auth_token, &host.host, &url) {
                                     Ok(_) => info!("trigger has been created"),
                                     Err(_) => {
-                                        error!("unable to create trigger for url '{}'", url);
+                                        error!("unable to create trigger for url '{url}'");
                                         has_errors = true;
                                     }
                                 }
                             },
                             Err(_) => {
-                                error!("unable to create web scenario for url '{}'", url);
+                                error!("unable to create web scenario for url '{url}'");
                                 has_errors = true;
                             }
                         }

@@ -8,7 +8,7 @@ const CONTENT_TYPE_JSON: &str = "application/json";
 
 pub fn send_post_request<T: Serialize>(client: &reqwest::blocking::Client,
                                        url: &str, request: T) -> StringResult {
-    debug!("send post request to '{}'", url);
+    debug!("send post request to '{url}'");
 
     let request_body = serde_json::to_string(&request).unwrap();
 

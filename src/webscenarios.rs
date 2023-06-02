@@ -85,13 +85,13 @@ pub fn create_web_scenario(client: &reqwest::blocking::Client,
                            api_endpoint: &str, auth_token: &str,
                            scenario_config: &WebScenarioConfig,
                            item_url: &str, host_id: &str) -> EmptyResult {
-    info!("creating web scenario for '{}'", item_url);
-    debug!("host-id: '{}'", host_id);
+    info!("creating web scenario for '{item_url}'");
+    debug!("host-id: '{host_id}'");
 
     let mut search_params = HashMap::new();
     search_params.insert("key_".to_string(), "Check index page '".to_string());
 
-    let scenario_name = format!("Check index page '{}'", item_url);
+    let scenario_name = format!("Check index page '{item_url}'");
 
     let step = WebScenarioStep {
         name: "Get page".to_string(),
@@ -115,11 +115,11 @@ pub fn create_web_scenario(client: &reqwest::blocking::Client,
 
     match send_post_request(client, api_endpoint, request) {
         Ok(_) => {
-            info!("web scenario has been created for '{}'", item_url);
+            info!("web scenario has been created for '{item_url}'");
             Ok(())
         }
         Err(_) => {
-            error!("unable to create web scenario for '{}'", item_url);
+            error!("unable to create web scenario for '{item_url}'");
             Err(OperationError::Error)
         }
     }

@@ -22,15 +22,15 @@ struct CreateTriggerResponse {
 pub fn create_trigger(client: &reqwest::blocking::Client,
                       api_endpoint: &str, api_token: &str,
                       host: &str, url: &str) -> EmptyResult {
-    debug!("create trigger for '{}', url '{}'", host, url);
+    debug!("create trigger for '{host}', url '{url}'");
 
-    let expression_body = format!("{}:web.test.fail[Check index page '{}'].last()", host, url);
+    let expression_body = format!("{host}:web.test.fail[Check index page '{url}'].last()");
 
     let expression_with_bracket = "{".to_string() + &expression_body;
 
     let expression = expression_with_bracket + "}<>0";
 
-    let trigger_name = format!("Site '{}' is unavailable", url);
+    let trigger_name = format!("Site '{url}' is unavailable");
 
     let params = CreateRequestParams {
         description: trigger_name,
@@ -51,11 +51,11 @@ pub fn create_trigger(client: &reqwest::blocking::Client,
             match create_response.error {
                 Some(_) => {
                     log_zabbix_error(&create_response.error);
-                    error!("unable to create trigger for '{}'", url);
+                    error!("unable to create trigger for '{url}'");
                     Err(OperationError::Error)
                 }
                 None => {
-                    info!("trigger has been created for url '{}'", url);
+                    info!("trigger has been created for url '{url}'");
                     Ok(())
                 }
             }
