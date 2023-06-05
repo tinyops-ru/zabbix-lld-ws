@@ -67,10 +67,3 @@ zabbix:
 Подробный лог `wszl.log`.
 
 Вы можете менять уровни логирования с помощью опции `--log-level`.
-
-## Roadmap
-
-- Control item search mask with command option
-- Control web scenario parameters with command options (title, return code, etc.)
-- Control trigger parameters with command options (title, severity, description, etc.)
-- Remove generated items

@@ -7,6 +7,7 @@ use serde::Serialize;
 
 use crate::config::WebScenarioConfig;
 use crate::http::send_post_request;
+use crate::template::{get_template_vars, process_template_string};
 use crate::types::{EmptyResult, OperationResult};
 use crate::zabbix::{UNSUPPORTED_RESPONSE_MESSAGE, ZABBIX_API_COMMUNICATION_ERROR, ZabbixError, ZabbixRequest};
 
@@ -86,7 +87,8 @@ pub fn create_web_scenario(client: &reqwest::blocking::Client,
     let mut search_params = HashMap::new();
     search_params.insert("key_".to_string(), "Check index page '".to_string());
 
-    let scenario_name = format!("Check index page '{item_url}'");
+    let template_vars = get_template_vars(&host_id, &item_url);
+    let scenario_name = process_template_string(&scenario_config.name, &template_vars);
 
     let step = WebScenarioStep {
         name: "Get page".to_string(),

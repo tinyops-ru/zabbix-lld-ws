@@ -80,6 +80,7 @@ impl Display for ZabbixApiVersion {
 #[derive(PartialEq, Deserialize, Clone, Debug)]
 #[serde(rename_all = "kebab-case")]
 pub struct WebScenarioConfig {
+    pub name: String,
     pub response_timeout: String,
     pub expect_status_code: String,
     pub attempts: u8,
@@ -89,8 +90,9 @@ pub struct WebScenarioConfig {
 impl Display for WebScenarioConfig {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
-            f, "response-timeout: '{}', expect-status-code: '{}, attempts: {}, update-interval: '{}'",
-            self.response_timeout, self.expect_status_code, self.attempts, self.update_interval
+            f, "name: '{}', response-timeout: '{}', expect-status-code: '{}, attempts: {}, update-interval: '{}'",
+            self.name, self.response_timeout,
+            self.expect_status_code, self.attempts, self.update_interval
         )
     }
 }
@@ -104,7 +106,8 @@ pub fn load_config_from_file(file_path: &Path) -> OperationResult<AppConfig> {
         .build()
         .unwrap();
 
-    let config = settings.try_deserialize::<AppConfig>().context("unable to load config")?;
+    let config = settings.try_deserialize::<AppConfig>()
+        .context("unable to load config")?;
 
     info!("config loaded: {}", config);
 
@@ -134,10 +137,11 @@ mod tests {
 
                         trigger: ZabbixTriggerConfig {
                             name: "Site '${URL}' is unavailable".to_string(),
-                            value: "last(/${HOST}/web.test.fail[Check index page '{$URL}'])<>0".to_string(),
+                            value: "last(/${HOST}/web.test.fail[Check index page '${URL}'])<>0".to_string(),
                         },
 
                         scenario: WebScenarioConfig {
+                            name: "Check index page '${URL}'".to_string(),
                             response_timeout: "15s".to_string(),
                             expect_status_code: "200".to_string(),
                             attempts: 3,
@@ -151,7 +155,7 @@ mod tests {
             Err(e) => {
                 eprintln!("{}", e);
                 eprintln!("{}", e.root_cause());
-                panic!("config should be loaded");
+                panic!("config expected");
             }
         }
     }

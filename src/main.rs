@@ -34,6 +34,7 @@ mod triggers;
 mod hosts;
 mod logging;
 mod http;
+pub mod template;
 
 const GENERATE_COMMAND: &str = "gen";
 const ITEM_KEY_SEARCH_MASK_ARG: &str = "item-key-starts-with";
