@@ -1,12 +1,14 @@
 # How to install
 
-1. Copy `wszl` to `/etc/zabbix` on Zabbix server
+1. Download [fresh release](https://github.com/tinyops-ru/zabbix-lld-ws/releases)
 
-2. Set permissions:
+2. Copy `wszl` to `/etc/zabbix` on Zabbix server
+
+3. Set permissions:
     ```bash
     chmod +x /etc/zabbix/wszl
     ```
-3. Create config file `/etc/zabbix/wszl.yml`:
+4. Create config file `/etc/zabbix/wszl.yml`:
     ```bash
     cp wszl.yml-example /etc/zabbix/wszl.yml
     ```
@@ -17,7 +19,7 @@
     chown zabbix: /etc/zabbix
     ```
 
-4. Add cron task (i.e. `/var/spool/cron/zabbix`):
+5. Add cron task (i.e. `/var/spool/cron/zabbix`):
     ```
     */30 * * * * /etc/zabbix/wszl gen
     ```   
