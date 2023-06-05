@@ -1,7 +1,7 @@
 stages:
   - build
 
-build:
+build-rockylinux8:
   stage: build
 
   only:
@@ -16,7 +16,7 @@ build:
     - upx -9 --lzma wszl
 
   artifacts:
-    name: wszl
+    name: wszl-rockylinux8
     paths:
       - wszl
       - README.md
@@ -26,3 +26,52 @@ build:
 
   tags:
     - rockylinux8
+
+build-rhel7:
+  stage: build
+
+  only:
+    - main
+
+  script:
+    - cargo test
+    - cargo build --release
+    - cp target/release/zabbix-lld-ws wszl
+    - eu-elfcompress wszl
+    - strip wszl
+    - upx -9 --lzma wszl
+
+  artifacts:
+    name: wszl-rhel7
+    paths:
+      - wszl
+      - README.md
+      - README.RU.md
+      - wszl.yml-example
+    expire_in: 1 week
+
+  tags:
+    - rhel7
+
+build-windows:
+  stage: build
+
+  only:
+    - main
+
+  script:
+    - cargo test
+    - cargo build --release
+    - copy target/release/zabbix-lld-ws.exe ./wszl.exe
+
+  artifacts:
+    name: wszl-windows
+    paths:
+      - wszl.exe
+      - README.md
+      - README.RU.md
+      - wszl.yml-example
+    expire_in: 1 week
+
+  tags:
+    - windows
