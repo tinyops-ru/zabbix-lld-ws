@@ -1,7 +1,7 @@
 zabbix:
   api:
     version: 6
-    endpoint: http://zabbix/api_jsonrpc.php
+    endpoint: https://zabbix.company.com/api_jsonrpc.php
     username: CHANGE-ME
     password: CHANGE-ME
 
