@@ -1,15 +1,14 @@
 use std::collections::HashMap;
 
-use serde::Deserialize;
-use serde::Serialize;
-
 use anyhow::anyhow;
 use anyhow::Context;
+use serde::Deserialize;
+use serde::Serialize;
 
 use crate::config::WebScenarioConfig;
 use crate::http::send_post_request;
 use crate::types::{EmptyResult, OperationResult};
-use crate::zabbix::{log_zabbix_error, UNSUPPORTED_RESPONSE_MESSAGE, ZabbixError, ZabbixRequest};
+use crate::zabbix::{UNSUPPORTED_RESPONSE_MESSAGE, ZabbixError, ZabbixRequest};
 
 #[derive(Deserialize, Debug)]
 pub struct ZabbixWebScenario {

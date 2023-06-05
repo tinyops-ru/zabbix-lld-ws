@@ -1,8 +1,10 @@
+use std::collections::HashMap;
+
+use anyhow::Context;
 use serde::Deserialize;
 use serde::Serialize;
 
-use anyhow::Context;
-
+use crate::config::ZabbixApiVersion;
 use crate::http::send_post_request;
 use crate::types::OperationResult;
 use crate::zabbix::JSONRPC;
@@ -11,15 +13,9 @@ use crate::zabbix::JSONRPC;
 struct AuthRequest {
     jsonrpc: String,
     method: String,
-    params: RequestParams,
+    params: HashMap<String, String>,
     id: i8,
     auth: Option<String>
-}
-
-#[derive(Serialize)]
-struct RequestParams {
-    user: String,
-    password: String
 }
 
 #[derive(Deserialize)]
@@ -27,14 +23,16 @@ struct AuthResponse {
     result: String
 }
 
-pub fn login_to_zabbix_api(client: &reqwest::blocking::Client, api_endpoint: &str,
+const AUTH_REQUEST_METHOD: &str = "user.login";
+
+pub fn login_to_zabbix_api(api_version: &ZabbixApiVersion,
+                           client: &reqwest::blocking::Client, api_endpoint: &str,
                            username: &str, password: &str) -> OperationResult<String> {
+
     let auth_request = AuthRequest {
         jsonrpc: JSONRPC.to_string(),
-        method: "user.login".to_string(),
-        params: RequestParams {
-            user: username.to_string(), password: password.to_string()
-        },
+        method: AUTH_REQUEST_METHOD.to_string(),
+        params: get_params(&api_version, username, password),
         id: 1,
         auth: None
     };
@@ -46,4 +44,18 @@ pub fn login_to_zabbix_api(client: &reqwest::blocking::Client, api_endpoint: &st
         .context("authentication error")?;
 
     Ok(String::from(auth_response.result))
+}
+
+fn get_params(api_version: &ZabbixApiVersion,
+                 username: &str, password: &str) -> HashMap<String, String> {
+
+    let username_field = match api_version {
+        ZabbixApiVersion::V6 => "username",
+        ZabbixApiVersion::V5 => "user"
+    };
+
+    HashMap::from([
+        (username_field.to_string(), username.to_string()),
+        ("password".to_string(), password.to_string()),
+    ])
 }

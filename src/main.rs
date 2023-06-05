@@ -6,15 +6,14 @@ use std::env;
 use std::path::Path;
 use std::process::exit;
 
+use anyhow::anyhow;
+use anyhow::Context;
 use clap::{App, Arg, SubCommand};
 use regex::Regex;
 use reqwest::blocking::Client;
 
-use anyhow::anyhow;
-use anyhow::Context;
-
 use crate::auth::login_to_zabbix_api;
-use crate::config::{load_config_from_file, ZabbixConfig};
+use crate::config::{load_config_from_file, ZabbixApiVersion, ZabbixConfig};
 use crate::hosts::{find_hosts, ZabbixHost};
 use crate::items::{find_zabbix_items, ZabbixItem};
 use crate::logging::get_logging_config;
@@ -94,7 +93,6 @@ fn main() {
     let logging_config = get_logging_config(logging_level);
     log4rs::init_config(logging_config).unwrap();
 
-
     let mut matched_command = false;
 
     match matches.subcommand_matches(GENERATE_COMMAND) {
@@ -110,7 +108,8 @@ fn main() {
                         matches.value_of(ITEM_KEY_SEARCH_MASK_ARG).unwrap()
                     } else { ITEM_KEY_SEARCH_MASK_DEFAULT_VALUE };
 
-                    match create_web_scenarios_and_triggers(&client, &config.zabbix, &item_key_search_mask) {
+                    match create_web_scenarios_and_triggers(&config.zabbix.api.version,
+                                    &client, &config.zabbix, &item_key_search_mask) {
                         Ok(_) => info!("web scenarios and triggers have been created"),
                         Err(_) => exit(ERROR_EXIT_CODE)
                     }
@@ -126,10 +125,12 @@ fn main() {
     }
 }
 
-fn create_web_scenarios_and_triggers(client: &Client, zabbix_config: &ZabbixConfig,
+fn create_web_scenarios_and_triggers(api_version: &ZabbixApiVersion,
+                                     client: &Client, zabbix_config: &ZabbixConfig,
                                      item_key_search_mask: &str) -> EmptyResult {
 
-    let auth_token = login_to_zabbix_api(&client, &zabbix_config.api.endpoint,
+    let auth_token = login_to_zabbix_api(&api_version, &client,
+                                         &zabbix_config.api.endpoint,
                                          &zabbix_config.api.username, &zabbix_config.api.password)
                                                     .context("zabbix api authentication error")?;
 

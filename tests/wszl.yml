@@ -1,5 +1,6 @@
 zabbix:
   api:
+    version: 6
     endpoint: http://zabbix/api_jsonrpc.php
     username: abcd
     password: 0329jg02934jg34g

@@ -51,6 +51,14 @@ File `wszl.yml`.
     - Web scenario params: title - "Check index page 'XYZ'", expected response code - 200
     - Trigger params: severity - High (4), title - 'Site XYZ is unavailable', expression `web.test.fail`  
 
+## Zabbix API version
+
+```yaml
+zabbix:
+  api:
+    version: 6 # Supported values: 6, 5
+```
+
 ## Troubleshooting
 
 Check `wszl.log` file for details.

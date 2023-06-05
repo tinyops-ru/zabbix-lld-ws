@@ -52,7 +52,15 @@ $ wszl gen
     - Параметры триггера: 
       - Уровень приоритета - High (4), 
       - Заголовок вида: 'Site XYZ is unavailable'
-      - Выражение: `web.test.fail`  
+      - Выражение: `web.test.fail`
+
+## Версия Zabbix API
+
+```yaml
+zabbix:
+  api:
+    version: 6 # Поддерживаемые значения: 6, 5
+```
 
 ## Решение проблем
 

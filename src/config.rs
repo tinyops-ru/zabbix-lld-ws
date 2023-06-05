@@ -1,9 +1,10 @@
 use std::fmt::{Display, Formatter};
 use std::path::Path;
 
-use serde::Deserialize;
-
+use anyhow::Context;
 use config::Config;
+use serde::Deserialize;
+use serde_repr::Deserialize_repr;
 
 use crate::types::OperationResult;
 
@@ -35,6 +36,7 @@ impl Display for ZabbixConfig {
 #[derive(PartialEq, Deserialize, Clone, Debug)]
 #[serde(rename_all = "kebab-case")]
 pub struct ZabbixApiConfig {
+    pub version: ZabbixApiVersion,
     pub endpoint: String,
     pub username: String,
     pub password: String
@@ -47,6 +49,13 @@ impl Display for ZabbixApiConfig {
             self.endpoint, self.username
         )
     }
+}
+
+#[derive(PartialEq, Deserialize_repr, Clone, Debug)]
+#[repr(u8)]
+pub enum ZabbixApiVersion {
+    V6 = 6,
+    V5 = 5
 }
 
 #[derive(PartialEq, Deserialize, Clone, Debug)]
@@ -76,7 +85,7 @@ pub fn load_config_from_file(file_path: &Path) -> OperationResult<AppConfig> {
         .build()
         .unwrap();
 
-    let config = settings.try_deserialize::<AppConfig>().unwrap();
+    let config = settings.try_deserialize::<AppConfig>().context("unable to load config")?;
 
     info!("config loaded: {}", config);
 
@@ -87,7 +96,7 @@ pub fn load_config_from_file(file_path: &Path) -> OperationResult<AppConfig> {
 mod tests {
     use std::path::Path;
 
-    use crate::config::{AppConfig, load_config_from_file, WebScenarioConfig, ZabbixApiConfig, ZabbixConfig};
+    use crate::config::{AppConfig, load_config_from_file, WebScenarioConfig, ZabbixApiConfig, ZabbixApiVersion, ZabbixConfig};
 
     #[test]
     fn complete_config_should_be_loaded_from_file() {
@@ -98,6 +107,7 @@ mod tests {
                 let expected_config = AppConfig {
                     zabbix: ZabbixConfig {
                         api: ZabbixApiConfig {
+                            version: ZabbixApiVersion::V6,
                             endpoint: "http://zabbix/api_jsonrpc.php".to_string(),
                             username: "abcd".to_string(),
                             password: "0329jg02934jg34g".to_string(),
@@ -112,7 +122,11 @@ mod tests {
 
                 assert_eq!(config, expected_config);
             }
-            Err(_) => panic!("config should be loaded")
+            Err(e) => {
+                eprintln!("{}", e);
+                eprintln!("{}", e.root_cause());
+                panic!("config should be loaded");
+            }
         }
     }
 }
