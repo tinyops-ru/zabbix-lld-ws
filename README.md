@@ -9,7 +9,7 @@ Adds Web Scenarios support to
 
 ### Installation
 
-See [INSTALL.md].
+See [INSTALL.md](INSTALL.md).
 
 ### Usage
 
