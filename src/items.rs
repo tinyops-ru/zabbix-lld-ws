@@ -1,14 +1,13 @@
 use std::collections::HashMap;
 
+use anyhow::anyhow;
+use anyhow::Context;
 use serde::Deserialize;
 use serde::Serialize;
 
-use anyhow::anyhow;
-use anyhow::Context;
-
 use crate::http::send_post_request;
 use crate::types::OperationResult;
-use crate::zabbix::{UNSUPPORTED_RESPONSE_MESSAGE, ZabbixError, ZabbixRequest};
+use crate::zabbix::{UNSUPPORTED_RESPONSE_MESSAGE, ZABBIX_API_COMMUNICATION_ERROR, ZabbixError, ZabbixRequest};
 
 #[derive(Serialize)]
 struct ItemSearchParams {
@@ -48,7 +47,7 @@ pub fn find_zabbix_items(client: &reqwest::blocking::Client,
     );
 
     let response = send_post_request(client, api_endpoint, request)
-        .context("zabbix api communication error")?;
+        .context(ZABBIX_API_COMMUNICATION_ERROR)?;
 
     let search_response: ItemSearchResponse = serde_json::from_str(&response)
         .context(UNSUPPORTED_RESPONSE_MESSAGE)?;

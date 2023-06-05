@@ -6,6 +6,8 @@ use crate::http::send_post_request;
 use crate::types::OperationResult;
 use crate::zabbix::{log_zabbix_error, UNSUPPORTED_RESPONSE_MESSAGE, ZabbixError, ZabbixRequest};
 
+const UNABLE_TO_FIND_ZABBIX_HOSTS_ERROR: &str = "unable to find zabbix hosts";
+
 #[derive(Serialize)]
 struct SearchRequestParams {
     #[serde(rename = "hostids")]
@@ -45,14 +47,14 @@ pub fn find_hosts(client: &reqwest::blocking::Client,
                 Some(hosts) => Ok(hosts),
                 None => {
                     log_zabbix_error(&search_response.error);
-                    error!("unable to find zabbix hosts");
-                    Err(anyhow!("unable to find zabbix hosts"))
+                    error!("{}: empty response", UNABLE_TO_FIND_ZABBIX_HOSTS_ERROR);
+                    Err(anyhow!(UNABLE_TO_FIND_ZABBIX_HOSTS_ERROR))
                 }
             }
         }
-        Err(_) => {
-            error!("unable to find zabbix hosts");
-            Err(anyhow!("unable to find zabbix hosts"))
+        Err(e) => {
+            error!("{}: {}", UNABLE_TO_FIND_ZABBIX_HOSTS_ERROR, e);
+            Err(anyhow!(UNABLE_TO_FIND_ZABBIX_HOSTS_ERROR))
         }
     }
 }

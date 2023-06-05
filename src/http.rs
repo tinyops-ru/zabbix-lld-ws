@@ -1,7 +1,6 @@
-use serde::Serialize;
-
 use anyhow::anyhow;
 use anyhow::Context;
+use serde::Serialize;
 
 use crate::types::OperationResult;
 use crate::zabbix::UNSUPPORTED_RESPONSE_MESSAGE;
@@ -13,7 +12,8 @@ pub fn send_post_request<T: Serialize>(client: &reqwest::blocking::Client,
                                        url: &str, request: T) -> OperationResult<String> {
     debug!("send post request to '{url}'");
 
-    let request_body = serde_json::to_string(&request).context(UNSUPPORTED_RESPONSE_MESSAGE)?;
+    let request_body = serde_json::to_string(&request)
+        .context(UNSUPPORTED_RESPONSE_MESSAGE)?;
 
     let response = client.post(url)
         .body(request_body)

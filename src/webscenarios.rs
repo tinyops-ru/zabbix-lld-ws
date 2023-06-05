@@ -8,7 +8,7 @@ use serde::Serialize;
 use crate::config::WebScenarioConfig;
 use crate::http::send_post_request;
 use crate::types::{EmptyResult, OperationResult};
-use crate::zabbix::{UNSUPPORTED_RESPONSE_MESSAGE, ZabbixError, ZabbixRequest};
+use crate::zabbix::{UNSUPPORTED_RESPONSE_MESSAGE, ZABBIX_API_COMMUNICATION_ERROR, ZabbixError, ZabbixRequest};
 
 #[derive(Deserialize, Debug)]
 pub struct ZabbixWebScenario {
@@ -60,7 +60,8 @@ pub fn find_web_scenarios(client: &reqwest::blocking::Client,
         "httptest.get", params, auth_token
     );
 
-    let response = send_post_request(client, api_endpoint, request).context("api communication error")?;
+    let response = send_post_request(client, api_endpoint, request)
+        .context(ZABBIX_API_COMMUNICATION_ERROR)?;
 
     let search_response: WebScenariosResponse = serde_json::from_str(&response)
         .context(UNSUPPORTED_RESPONSE_MESSAGE)?;

@@ -7,7 +7,7 @@ use serde::Serialize;
 use crate::config::ZabbixApiVersion;
 use crate::http::send_post_request;
 use crate::types::OperationResult;
-use crate::zabbix::JSONRPC;
+use crate::zabbix::{JSONRPC, ZABBIX_API_COMMUNICATION_ERROR};
 
 #[derive(Serialize)]
 struct AuthRequest {
@@ -38,7 +38,7 @@ pub fn login_to_zabbix_api(api_version: &ZabbixApiVersion,
     };
 
     let response = send_post_request(&client, api_endpoint, auth_request)
-        .context("api communication error")?;
+        .context(ZABBIX_API_COMMUNICATION_ERROR)?;
 
     let auth_response = serde_json::from_str::<AuthResponse>(&response)
         .context("authentication error")?;

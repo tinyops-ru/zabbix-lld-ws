@@ -4,6 +4,7 @@ use serde::Serialize;
 pub const JSONRPC: &str = "2.0";
 
 pub const UNSUPPORTED_RESPONSE_MESSAGE: &str = "unsupported zabbix api response";
+pub const ZABBIX_API_COMMUNICATION_ERROR: &str = "zabbix api communication error";
 
 #[derive(Serialize)]
 pub struct ZabbixRequest<P: Serialize> {

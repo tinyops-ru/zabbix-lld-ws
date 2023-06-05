@@ -8,7 +8,7 @@ use serde::Serialize;
 use crate::config::ZabbixTriggerConfig;
 use crate::http::send_post_request;
 use crate::types::EmptyResult;
-use crate::zabbix::{log_zabbix_error, UNSUPPORTED_RESPONSE_MESSAGE, ZabbixError, ZabbixRequest};
+use crate::zabbix::{log_zabbix_error, UNSUPPORTED_RESPONSE_MESSAGE, ZABBIX_API_COMMUNICATION_ERROR, ZabbixError, ZabbixRequest};
 
 #[derive(Serialize)]
 struct CreateRequestParams {
@@ -54,7 +54,7 @@ pub fn create_trigger(client: &reqwest::blocking::Client,
     );
 
     let response = send_post_request(client, api_endpoint, request)
-                                    .context("zabbix api communication error")?;
+                                    .context(ZABBIX_API_COMMUNICATION_ERROR)?;
 
     let create_response: CreateTriggerResponse = serde_json::from_str(&response)
                                                 .context(UNSUPPORTED_RESPONSE_MESSAGE)?;
