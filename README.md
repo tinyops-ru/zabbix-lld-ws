@@ -9,28 +9,7 @@ Adds Web Scenarios support to
 
 ### Installation
 
-1. Install [vhdt](https://github.com/lebe-dev/vhost-discovery-tool) for virtual hosts low level discovery (nginx or apache).
-2. Copy `wszl` to `/etc/zabbix` on Zabbix server
-3. Set permissions:
-    ```bash
-    chmod +x /etc/zabbix/wszl
-    ```
-4. Create config file `/etc/zabbix/wszl.yml`:
-    ```bash
-    cp wszl.yml-example /etc/zabbix/wszl.yml
-    ```
-   
-    Update permissions:
-    ```shell script
-    chmod 750 /etc/zabbix/wszl.yml
-    chown zabbix: /etc/zabbix
-    ```
-    
-5. Add cron task (i.e. `/var/spool/cron/zabbix`):
-    ```
-    */30 * * * * /etc/zabbix/wszl gen
-    ```   
-    Every 30 minutes tool will generate required items.
+See [INSTALL.md].
 
 ### Usage
 
@@ -44,10 +23,14 @@ $ wszl gen
 
 File `wszl.yml`.
 
+**Options:**
+
+- `--item-key-starts-with` - specify item search mask
+
 ## How it works
 
 1. WSZL gets items from Zabbix API by mask
-2. Creates missing web scenarios and triggers
+2. Creates web scenarios and triggers
     - Web scenario params: title - "Check index page 'XYZ'", expected response code - 200
     - Trigger params: severity - High (4), title - 'Site XYZ is unavailable', expression `web.test.fail`  
 
