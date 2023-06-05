@@ -2,7 +2,7 @@
 
 [Русская версия](README.RU.md)
 
-Adds Web Scenarios support to 
+Adds Web Scenarios support for 
 [Zabbix Low Level Discovery](https://www.zabbix.com/documentation/current/manual/discovery/low_level_discovery) feature.
 
 ## Getting started
