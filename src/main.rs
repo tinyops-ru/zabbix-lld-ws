@@ -222,12 +222,12 @@ fn create_scenario_and_trigger_for_item(zabbix_config: &ZabbixConfig,
         } else {
             debug!("web scenario wasn't found for url '{url}', creating..");
 
-            match zabbix_objects.hosts.iter().find(|host| host.hostid == zabbix_item.hostid) {
+            match zabbix_objects.hosts.iter().find(|host| host.host_id == zabbix_item.hostid) {
                 Some(host) => {
 
                     if let Ok(_) = create_web_scenario(
                         &client, &zabbix_config.api.endpoint, &auth_token,
-                        &zabbix_config.scenario, &url, &host.hostid) {
+                        &zabbix_config.scenario, &url, &host.host_id) {
 
                         info!("web scenario has been created for '{url}'");
 

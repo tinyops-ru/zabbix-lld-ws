@@ -1,7 +1,6 @@
+use anyhow::anyhow;
 use serde::Deserialize;
 use serde::Serialize;
-
-use anyhow::anyhow;
 
 use crate::http::send_post_request;
 use crate::types::OperationResult;
@@ -9,7 +8,8 @@ use crate::zabbix::{log_zabbix_error, UNSUPPORTED_RESPONSE_MESSAGE, ZabbixError,
 
 #[derive(Serialize)]
 struct SearchRequestParams {
-    hostids: Vec<String>
+    #[serde(rename = "hostids")]
+    host_ids: Vec<String>
 }
 
 #[derive(Deserialize)]
@@ -20,7 +20,8 @@ struct SearchResponse {
 
 #[derive(Deserialize)]
 pub struct ZabbixHost {
-    pub hostid: String,
+    #[serde(rename = "hostid")]
+    pub host_id: String,
     pub host: String
 }
 
@@ -29,7 +30,7 @@ pub fn find_hosts(client: &reqwest::blocking::Client,
                   ids: Vec<String>) -> OperationResult<Vec<ZabbixHost>> {
     info!("find hosts by ids..");
 
-    let params = SearchRequestParams { hostids: ids };
+    let params = SearchRequestParams { host_ids: ids };
 
     let request: ZabbixRequest<SearchRequestParams> = ZabbixRequest::new(
         "host.get", params, api_token

@@ -29,7 +29,8 @@ struct WebScenariosResponse {
 #[derive(Serialize)]
 struct CreateRequestParams {
     name: String,
-    hostid: String,
+    #[serde(rename = "hostid")]
+    host_id: String,
     steps: Vec<WebScenarioStep>,
     delay: String,
     retries: u8
@@ -95,7 +96,7 @@ pub fn create_web_scenario(client: &reqwest::blocking::Client,
 
     let params = CreateRequestParams {
         name: scenario_name,
-        hostid: host_id.to_string(),
+        host_id: host_id.to_string(),
         delay: scenario_config.update_interval.to_string(),
         retries: scenario_config.attempts,
         steps: vec![step],
