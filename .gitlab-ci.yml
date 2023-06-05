@@ -25,6 +25,4 @@ build:
     expire_in: 1 week
 
   tags:
-    - build
-    - rust
-    - centos
+    - rockylinux8
