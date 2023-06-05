@@ -5,6 +5,10 @@ zabbix:
     username: abcd
     password: 0329jg02934jg34g
 
+  trigger:
+    name: "Site '${URL}' is unavailable"
+    value: "last(/${HOST}/web.test.fail[Check index page '{$URL}'])<>0"
+
   scenario:
     response-timeout: "15s"
     expect-status-code: "200"

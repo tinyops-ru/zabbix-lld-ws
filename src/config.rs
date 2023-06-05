@@ -24,6 +24,9 @@ impl Display for AppConfig {
 #[serde(rename_all = "kebab-case")]
 pub struct ZabbixConfig {
     pub api: ZabbixApiConfig,
+
+    pub trigger: ZabbixTriggerConfig,
+
     pub scenario: WebScenarioConfig
 }
 
@@ -31,6 +34,13 @@ impl Display for ZabbixConfig {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "api: '{}', scenario: '{}'", self.api, self.scenario)
     }
+}
+
+#[derive(PartialEq, Deserialize, Clone, Debug)]
+#[serde(rename_all = "kebab-case")]
+pub struct ZabbixTriggerConfig {
+    pub name: String,
+    pub value: String,
 }
 
 #[derive(PartialEq, Deserialize, Clone, Debug)]
@@ -45,8 +55,8 @@ pub struct ZabbixApiConfig {
 impl Display for ZabbixApiConfig {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
-            f, "endpoint: '{}', username: '{}', password: '*********'",
-            self.endpoint, self.username
+            f, "{}, endpoint: '{}', username: '{}', password: '*********'",
+            self.version, self.endpoint, self.username
         )
     }
 }
@@ -56,6 +66,15 @@ impl Display for ZabbixApiConfig {
 pub enum ZabbixApiVersion {
     V6 = 6,
     V5 = 5
+}
+
+impl Display for ZabbixApiVersion {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ZabbixApiVersion::V6 => write!(f, "api version: 6"),
+            ZabbixApiVersion::V5 => write!(f, "api version: 5")
+        }
+    }
 }
 
 #[derive(PartialEq, Deserialize, Clone, Debug)]
@@ -96,7 +115,7 @@ pub fn load_config_from_file(file_path: &Path) -> OperationResult<AppConfig> {
 mod tests {
     use std::path::Path;
 
-    use crate::config::{AppConfig, load_config_from_file, WebScenarioConfig, ZabbixApiConfig, ZabbixApiVersion, ZabbixConfig};
+    use crate::config::{AppConfig, load_config_from_file, WebScenarioConfig, ZabbixApiConfig, ZabbixApiVersion, ZabbixConfig, ZabbixTriggerConfig};
 
     #[test]
     fn complete_config_should_be_loaded_from_file() {
@@ -111,7 +130,14 @@ mod tests {
                             endpoint: "http://zabbix/api_jsonrpc.php".to_string(),
                             username: "abcd".to_string(),
                             password: "0329jg02934jg34g".to_string(),
-                        }, scenario: WebScenarioConfig {
+                        },
+
+                        trigger: ZabbixTriggerConfig {
+                            name: "Site '${URL}' is unavailable".to_string(),
+                            value: "last(/${HOST}/web.test.fail[Check index page '{$URL}'])<>0".to_string(),
+                        },
+
+                        scenario: WebScenarioConfig {
                             response_timeout: "15s".to_string(),
                             expect_status_code: "200".to_string(),
                             attempts: 3,

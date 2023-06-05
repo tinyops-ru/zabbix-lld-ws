@@ -225,11 +225,15 @@ fn create_scenario_and_trigger_for_item(zabbix_config: &ZabbixConfig,
             match zabbix_objects.hosts.iter().find(|host| host.hostid == zabbix_item.hostid) {
                 Some(host) => {
 
-                    if let Ok(_) = create_web_scenario(&client, &zabbix_config.api.endpoint, &auth_token, &zabbix_config.scenario, &url, &host.hostid) {
+                    if let Ok(_) = create_web_scenario(
+                        &client, &zabbix_config.api.endpoint, &auth_token,
+                        &zabbix_config.scenario, &url, &host.hostid) {
 
                         info!("web scenario has been created for '{url}'");
 
-                        if let Ok(_) = create_trigger(&client, &zabbix_config.api.endpoint, &auth_token, &host.host, &url) {
+                        if let Ok(_) = create_trigger(&client,
+                      &zabbix_config.api.endpoint, &auth_token,
+                                          &zabbix_config.trigger, &host.host, &url) {
                             info!("trigger has been created");
 
                         } else {
