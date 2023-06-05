@@ -22,7 +22,7 @@ Adds Web Scenarios support to
    
     Update permissions:
     ```shell script
-    chmod o-rwx /etc/zabbix/wszl.yml
+    chmod 750 /etc/zabbix/wszl.yml
     chown zabbix: /etc/zabbix
     ```
     
@@ -30,7 +30,7 @@ Adds Web Scenarios support to
     ```
     */30 * * * * /etc/zabbix/wszl gen
     ```   
-    Every 30 minutes tool will generate proper items.
+    Every 30 minutes tool will generate required items.
 
 ### Usage
 
