@@ -64,3 +64,7 @@ zabbix:
 Check `wszl.log` file for details.
 
 You can switch logging levels with `--log-level` option.
+
+## Contributors
+
+- [cuchac](https://github.com/cuchac)
