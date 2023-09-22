@@ -1,7 +1,7 @@
 stages:
   - build
 
-build-rockylinux8:
+build-linux:
   stage: build
 
   only:
@@ -9,8 +9,8 @@ build-rockylinux8:
 
   script:
     - cargo test
-    - cargo build --release
-    - cp target/release/zabbix-lld-ws wszl
+    - cross build --release
+    - cp target/x86_64-unknown-linux-gnu/release/zabbix-lld-ws wszl
     - eu-elfcompress wszl
     - strip wszl
     - upx -9 --lzma wszl
