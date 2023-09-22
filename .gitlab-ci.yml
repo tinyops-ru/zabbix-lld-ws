@@ -36,7 +36,7 @@ build-rhel7:
   script:
     - cross test
     - cross build --release
-    - cp target/x86_64-unknown-linux-gnu/zabbix-lld-ws wszl
+    - cp target/x86_64-unknown-linux-gnu/release/zabbix-lld-ws wszl
     - eu-elfcompress wszl
     - strip wszl
     - upx -9 --lzma wszl
