@@ -2,3 +2,6 @@
 #rustflags = [
 #    "-C", "link-arg=-fuse-ld=mold",
 #]
+
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
