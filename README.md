@@ -46,7 +46,11 @@ zabbix:
 
 Check `wszl.log` file for details.
 
-You can switch logging levels with `--log-level` option.
+You can switch logging levels with `--log-level` option. Example:
+
+```shell
+wszl --log-level=debug gen
+```
 
 ## Contributors
 
