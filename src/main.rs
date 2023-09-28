@@ -17,7 +17,8 @@ use crate::config::{load_config_from_file, ZabbixApiVersion, ZabbixConfig};
 use crate::hosts::{find_hosts, ZabbixHost};
 use crate::items::{find_zabbix_items, ZabbixItem};
 use crate::logging::get_logging_config;
-use crate::triggers::create_trigger;
+use crate::template::{get_template_vars, process_template_string};
+use crate::triggers::{create_trigger, find_zabbix_trigger};
 use crate::types::{EmptyResult, OperationResult};
 use crate::webscenarios::{create_web_scenario, find_web_scenarios, ZabbixWebScenario};
 
@@ -176,7 +177,7 @@ fn truncate(s: &str, max_chars: usize) -> &str {
 
 fn find_zabbix_objects(client: &Client, zabbix_config: &ZabbixConfig,
                        auth_token: &str, item_key_search_mask: &str) ->
-                                                                OperationResult<ZabbixObjects> {
+                                                                OperationResult<ZabbixEntities> {
 
     let items = find_zabbix_items(&client, &zabbix_config.api.endpoint,
                       &auth_token, item_key_search_mask).context("unable to find zabbix items")?;
@@ -193,7 +194,7 @@ fn find_zabbix_objects(client: &Client, zabbix_config: &ZabbixConfig,
     let hosts = find_hosts(&client, &zabbix_config.api.endpoint, &auth_token, host_ids).context("unable to find hosts")?;
 
     Ok(
-        ZabbixObjects {
+        ZabbixEntities {
             items,
             web_scenarios,
             hosts
@@ -203,7 +204,7 @@ fn find_zabbix_objects(client: &Client, zabbix_config: &ZabbixConfig,
 
 fn create_scenario_and_trigger_for_item(zabbix_config: &ZabbixConfig,
                                         auth_token: &str, client: &Client,
-                                        url_pattern: &Regex, zabbix_objects: &ZabbixObjects,
+                                        url_pattern: &Regex, zabbix_objects: &ZabbixEntities,
                                         zabbix_item: &ZabbixItem) -> EmptyResult {
     let mut has_errors = false;
 
@@ -211,47 +212,66 @@ fn create_scenario_and_trigger_for_item(zabbix_config: &ZabbixConfig,
     debug!("item: {}", zabbix_item.name);
 
     if url_pattern.is_match(&zabbix_item.key_) {
-        let groups = url_pattern.captures_iter(&zabbix_item.key_).next().context("unable to get regexp group")?;
+        let groups = url_pattern.captures_iter(&zabbix_item.key_).next()
+                                                        .context("unable to get regexp group")?;
         let url = String::from(&groups[1]);
         debug!("- url '{url}'");
 
         let scenario_name = format!("Check index page '{url}'");
 
-        if let Some(_) = zabbix_objects.web_scenarios.iter().find(|entity| entity.name == scenario_name) {
-            debug!("web scenario has been found for url '{url}', skip");
+        match zabbix_objects.hosts.iter()
+            .find(|host| host.host_id == zabbix_item.hostid) {
+            Some(host) => {
 
-        } else {
-            debug!("web scenario wasn't found for url '{url}', creating..");
+                if let Some(_) = zabbix_objects.web_scenarios.iter()
+                    .find(|entity| entity.name == scenario_name) {
+                    debug!("web scenario has been found for url '{url}', skip");
 
-            match zabbix_objects.hosts.iter().find(|host| host.host_id == zabbix_item.hostid) {
-                Some(host) => {
+                } else {
+                    debug!("web scenario wasn't found for url '{url}', creating..");
 
-                    if let Ok(_) = create_web_scenario(
+                    let mut has_errors = false;
+
+                    match create_web_scenario(
                         &client, &zabbix_config.api.endpoint, &auth_token,
                         &zabbix_config.scenario, &url, &host.host_id) {
-
-                        info!("web scenario has been created for '{url}'");
-
-                        if let Ok(_) = create_trigger(&client,
-                      &zabbix_config.api.endpoint, &auth_token,
-                                          &zabbix_config.trigger, &host.host, &url) {
-                            info!("trigger has been created");
-
-                        } else {
-                            error!("unable to create trigger for url '{url}'");
+                        Ok(_) => info!("web scenario has been created for '{url}'"),
+                        Err(e) => {
+                            error!("unable to create web scenario: {}", e);
                             has_errors = true;
                         }
-
-                    } else {
-                        error!("unable to create web scenario for url '{url}'");
-                        has_errors = true;
                     }
 
+                    if !has_errors {
+                        let template_vars = get_template_vars(&host.host, &url);
+                        let trigger_name = process_template_string(
+                            &zabbix_config.trigger.name, &template_vars);
+
+                        match find_zabbix_trigger(&client, &zabbix_config, &auth_token, &trigger_name) {
+                            Ok(trigger) => {
+                                if trigger.is_none() {
+                                    match create_trigger(&client,
+                                                         &zabbix_config.api.endpoint, &auth_token,
+                                                         &zabbix_config.trigger, &host.host, &url) {
+                                        Ok(_) => info!("trigger '{trigger_name}' has been created"),
+                                        Err(e) =>
+                                            error!("unable to create trigger '{trigger_name}': {}", e)
+                                    }
+
+                                } else {
+                                    info!("trigger '{trigger_name}' already exists, skip")
+                                }
+                            }
+                            Err(e) =>
+                                error!("unable to find zabbix trigger by name '{trigger_name}': {}", e)
+                        }
+                    }
                 }
-                None => {
-                    error!("host wasn't found by id {}", zabbix_item.hostid);
-                    has_errors = true;
-                }
+
+            }
+            None => {
+                error!("host wasn't found by id {}", zabbix_item.hostid);
+                has_errors = true;
             }
         }
 
@@ -268,7 +288,7 @@ fn create_scenario_and_trigger_for_item(zabbix_config: &ZabbixConfig,
     }
 }
 
-struct ZabbixObjects {
+struct ZabbixEntities {
     items: Vec<ZabbixItem>,
     web_scenarios: Vec<ZabbixWebScenario>,
     hosts: Vec<ZabbixHost>

@@ -17,8 +17,8 @@ pub struct ZabbixWebScenario {
 }
 
 #[derive(Serialize)]
-struct GetWebScenariosRequestParams {
-    search: HashMap<String, String>
+pub struct GetSearchRequestParams {
+    pub search: HashMap<String, String>
 }
 
 #[derive(Deserialize)]
@@ -53,11 +53,11 @@ pub fn find_web_scenarios(client: &reqwest::blocking::Client,
     let mut search_params = HashMap::new();
     search_params.insert("key_".to_string(), "Check index page '".to_string());
 
-    let params = GetWebScenariosRequestParams {
+    let params = GetSearchRequestParams {
         search: search_params
     };
 
-    let request: ZabbixRequest<GetWebScenariosRequestParams> = ZabbixRequest::new(
+    let request: ZabbixRequest<GetSearchRequestParams> = ZabbixRequest::new(
         "httptest.get", params, auth_token
     );
 

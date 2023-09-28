@@ -1,13 +1,22 @@
+use std::collections::HashMap;
+
 use anyhow::anyhow;
 use anyhow::Context;
+use reqwest::blocking::Client;
 use serde::Deserialize;
 use serde::Serialize;
 
-use crate::config::ZabbixTriggerConfig;
+use crate::config::{ZabbixConfig, ZabbixTriggerConfig};
 use crate::http::send_post_request;
 use crate::template::{get_template_vars, process_template_string};
-use crate::types::EmptyResult;
+use crate::types::{EmptyResult, OperationResult};
+use crate::webscenarios::GetSearchRequestParams;
 use crate::zabbix::{log_zabbix_error, UNSUPPORTED_RESPONSE_MESSAGE, ZABBIX_API_COMMUNICATION_ERROR, ZabbixError, ZabbixRequest};
+
+#[derive(Deserialize, Clone, Debug)]
+pub struct ZabbixTrigger {
+    pub name: String
+}
 
 #[derive(Serialize)]
 struct CreateRequestParams {
@@ -22,7 +31,46 @@ struct CreateTriggerResponse {
     error: Option<ZabbixError>
 }
 
-pub fn create_trigger(client: &reqwest::blocking::Client,
+pub fn find_zabbix_trigger(client: &Client, zabbix_config: &ZabbixConfig,
+                       auth_token: &str, name: &str) ->
+                       OperationResult<Option<ZabbixTrigger>> {
+    info!("find trigger by name '{name}'..");
+
+    let mut search_params = HashMap::new();
+    search_params.insert("description".to_string(), name.to_string());
+
+    let params = GetSearchRequestParams {
+        search: search_params
+    };
+
+    let request: ZabbixRequest<GetSearchRequestParams> = ZabbixRequest::new(
+        "trigger.get", params, auth_token
+    );
+
+    let response = send_post_request(client, &zabbix_config.api.endpoint, request)
+        .context(ZABBIX_API_COMMUNICATION_ERROR)?;
+
+    let search_response: TriggerSearchResponse = serde_json::from_str(&response)
+        .context(UNSUPPORTED_RESPONSE_MESSAGE)?;
+
+    if !search_response.result.is_empty() {
+        let trigger = search_response.result.first().unwrap();
+        debug!("trigger found: {:?}", &trigger);
+        Ok(Some(trigger.clone()))
+
+    } else {
+        info!("trigger wasn't found by name '{name}'");
+        Ok(None)
+    }
+}
+
+#[derive(Deserialize)]
+struct TriggerSearchResponse {
+    result: Vec<ZabbixTrigger>,
+    error: Option<ZabbixError>
+}
+
+pub fn create_trigger(client: &Client,
                       api_endpoint: &str, api_token: &str,
                       trigger: &ZabbixTriggerConfig,
                       host: &str, url: &str) -> EmptyResult {
