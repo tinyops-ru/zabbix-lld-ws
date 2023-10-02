@@ -46,6 +46,7 @@ const WORK_DIR_ARGUMENT: &str = "work-dir";
 const LOG_LEVEL_ARGUMENT: &str = "log-level";
 const LOG_LEVEL_DEFAULT_VALUE: &str = "info";
 
+const OK_EXIT_CODE: i32 = 0;
 const ERROR_EXIT_CODE: i32 = 1;
 
 fn main() {
@@ -112,7 +113,7 @@ fn main() {
 
                     match create_web_scenarios_and_triggers(&config.zabbix.api.version,
                                     &client, &config.zabbix, &item_key_search_mask) {
-                        Ok(_) => info!("web scenarios and triggers have been created"),
+                        Ok(_) => exit(OK_EXIT_CODE),
                         Err(_) => exit(ERROR_EXIT_CODE)
                     }
                 }
@@ -152,11 +153,13 @@ fn create_web_scenarios_and_triggers(api_version: &ZabbixApiVersion,
     for item in &zabbix_objects.items {
         debug!("item '{}'", item.name);
 
-        if let Ok(_) = create_scenario_and_trigger_for_item(zabbix_config, &auth_token,
-                                        client, &url_pattern, &zabbix_objects, item) {
-
-        } else {
-            has_errors = true
+        match create_scenario_and_trigger_for_item(zabbix_config, &auth_token,
+                                                   client, &url_pattern, &zabbix_objects, item) {
+            Ok(_) => {}
+            Err(e) => {
+                error!("{}", e);
+                has_errors = true
+            }
         }
     }
 
