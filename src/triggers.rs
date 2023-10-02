@@ -81,10 +81,7 @@ pub fn create_trigger(client: &Client,
     let template_vars = get_template_vars(&host, &url);
 
     let trigger_name = process_template_string(&trigger.name, &template_vars);
-    let trigger_expression = process_template_string(&trigger.value, &template_vars);
-
-    let expression_with_bracket = "{".to_string() + &trigger_expression;
-    let expression = expression_with_bracket + "}<>0";
+    let expression = process_template_string(&trigger.value, &template_vars);
 
     debug!("trigger name '{trigger_name}'");
     debug!("trigger expression '{expression}'");
