@@ -220,55 +220,18 @@ fn create_scenario_and_trigger_for_item(zabbix_config: &ZabbixConfig,
         let url = String::from(&groups[1]);
         debug!("- url '{url}'");
 
-        let scenario_name = format!("Check index page '{url}'");
-
         match zabbix_objects.hosts.iter()
             .find(|host| host.host_id == zabbix_item.hostid) {
             Some(host) => {
 
-                if let Some(_) = zabbix_objects.web_scenarios.iter()
-                    .find(|entity| entity.name == scenario_name) {
-                    debug!("web scenario has been found for url '{url}', skip");
-
-                } else {
-                    debug!("web scenario wasn't found for url '{url}', creating..");
-
-                    let mut has_errors = false;
-
-                    match create_web_scenario(
-                        &client, &zabbix_config.api.endpoint, &auth_token,
-                        &zabbix_config.scenario, &url, &host.host_id) {
-                        Ok(_) => info!("web scenario has been created for '{url}'"),
-                        Err(e) => {
-                            error!("unable to create web scenario: {}", e);
-                            has_errors = true;
+                match create_web_scenario_if_does_not_exists(&zabbix_config, &auth_token, &url, &client, &host, &zabbix_objects) {
+                    Ok(_) => {
+                        match create_trigger_if_does_not_exists(&zabbix_config, &auth_token, &url, &client, &host) {
+                            Ok(_) => {}
+                            Err(_) => {}
                         }
                     }
-
-                    if !has_errors {
-                        let template_vars = get_template_vars(&host.host, &url);
-                        let trigger_name = process_template_string(
-                            &zabbix_config.trigger.name, &template_vars);
-
-                        match find_zabbix_trigger(&client, &zabbix_config, &auth_token, &trigger_name) {
-                            Ok(trigger) => {
-                                if trigger.is_none() {
-                                    match create_trigger(&client,
-                                                         &zabbix_config.api.endpoint, &auth_token,
-                                                         &zabbix_config.trigger, &host.host, &url) {
-                                        Ok(_) => info!("trigger '{trigger_name}' has been created"),
-                                        Err(e) =>
-                                            error!("unable to create trigger '{trigger_name}': {}", e)
-                                    }
-
-                                } else {
-                                    info!("trigger '{trigger_name}' already exists, skip")
-                                }
-                            }
-                            Err(e) =>
-                                error!("unable to find zabbix trigger by name '{trigger_name}': {}", e)
-                        }
-                    }
+                    Err(_) => {}
                 }
 
             }
@@ -289,6 +252,60 @@ fn create_scenario_and_trigger_for_item(zabbix_config: &ZabbixConfig,
     } else {
         Ok(())
     }
+}
+
+fn create_web_scenario_if_does_not_exists(zabbix_config: &ZabbixConfig, auth_token: &str,
+                                          url: &str, client: &Client,
+                        zabbix_host: &ZabbixHost, zabbix_objects: &ZabbixEntities) -> EmptyResult {
+
+    let scenario_name = format!("Check index page '{url}'");
+
+    match zabbix_objects.web_scenarios.iter()
+        .find(|entity| entity.name == scenario_name) {
+        None => {
+            match create_web_scenario(
+                &client, &zabbix_config.api.endpoint, &auth_token,
+                &zabbix_config.scenario, &url, &zabbix_host.host_id) {
+                Ok(_) => info!("web scenario has been created for '{url}'"),
+                Err(e) => {
+                    error!("unable to create web scenario: {}", e);
+                    return Err(e)
+                }
+            }
+        }
+        Some(_) => info!("web scenario '{scenario_name}' already found, skip.")
+    }
+
+    Ok(())
+}
+
+fn create_trigger_if_does_not_exists(zabbix_config: &ZabbixConfig, auth_token: &str,
+                                     url: &str, client: &Client,
+                                     zabbix_host: &ZabbixHost) -> EmptyResult {
+    let template_vars = get_template_vars(&zabbix_host.host, &url);
+    let trigger_name = process_template_string(
+        &zabbix_config.trigger.name, &template_vars);
+
+    match find_zabbix_trigger(&client, &zabbix_config, &auth_token, &trigger_name) {
+        Ok(trigger) => {
+            if trigger.is_none() {
+                match create_trigger(&client,
+                                     &zabbix_config.api.endpoint, &auth_token,
+                                     &zabbix_config.trigger, &zabbix_host.host, &url) {
+                    Ok(_) => info!("trigger '{trigger_name}' has been created"),
+                    Err(e) =>
+                        error!("unable to create trigger '{trigger_name}': {}", e)
+                }
+
+            } else {
+                info!("trigger '{trigger_name}' already exists, skip")
+            }
+        }
+        Err(e) =>
+            error!("unable to find zabbix trigger by name '{trigger_name}': {}", e)
+    }
+
+    Ok(())
 }
 
 struct ZabbixEntities {
