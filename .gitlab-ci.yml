@@ -1,7 +1,32 @@
 stages:
   - build
 
-build-linux:
+build-debian:
+  stage: build
+
+  only:
+    - main
+
+  script:
+    - RUSTFLAGS='-C target-feature=+crt-static' cargo build --release --target x86_64-unknown-linux-gnu
+    - cp target/x86_64-unknown-linux-gnu/release/zabbix-lld-ws wszl
+    - eu-elfcompress wszl
+    - strip wszl
+    - upx -9 --lzma wszl
+
+  artifacts:
+    name: wszl-rockylinux8
+    paths:
+      - wszl
+      - README.md
+      - README.RU.md
+      - wszl.yml-example
+    expire_in: 1 week
+
+  tags:
+    - tinybull
+
+build-rhel8:
   stage: build
 
   only:
