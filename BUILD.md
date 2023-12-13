@@ -1,6 +1,13 @@
 # How to build
 
-## Linux
+## Linux (debian / ubuntu)
+
+```shell
+apt install libssl-dev -y
+RUSTFLAGS='-C target-feature=+crt-static' cargo build --release --target x86_64-unknown-linux-gnu
+```
+
+## Linux (docker)
 
 1. Install [cross](https://github.com/cross-rs/cross)
 
