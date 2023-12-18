@@ -7,6 +7,7 @@ pub mod auth;
 pub mod hosts;
 pub mod webscenarios;
 pub mod find;
+pub mod service;
 
 pub const JSONRPC: &str = "2.0";
 

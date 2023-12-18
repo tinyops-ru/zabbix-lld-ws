@@ -66,7 +66,6 @@ pub fn create_web_scenario(client: &Client,
         steps: vec![step],
     };
 
-
     let request: ZabbixRequest<CreateRequestParams> = ZabbixRequest::new(
         "httptest.create", params, auth_token
     );

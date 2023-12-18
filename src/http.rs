@@ -1,5 +1,6 @@
 use anyhow::anyhow;
 use anyhow::Context;
+use reqwest::blocking::Client;
 use serde::Serialize;
 
 use crate::types::OperationResult;
@@ -8,7 +9,7 @@ use crate::zabbix::UNSUPPORTED_RESPONSE_MESSAGE;
 const CONTENT_TYPE_HEADER: &str = "Content-Type";
 const CONTENT_TYPE_JSON: &str = "application/json";
 
-pub fn send_post_request<T: Serialize>(client: &reqwest::blocking::Client,
+pub fn send_post_request<T: Serialize>(client: &Client,
                                        url: &str, request: T) -> OperationResult<String> {
     debug!("send post request to '{url}'");
 

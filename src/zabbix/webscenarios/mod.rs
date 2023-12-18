@@ -22,26 +22,26 @@ pub struct GetSearchRequestParams {
 }
 
 #[derive(Deserialize)]
-struct WebScenariosResponse {
+pub struct WebScenariosResponse {
     result: Option<Vec<ZabbixWebScenario>>
 }
 
 #[derive(Serialize)]
-struct CreateRequestParams {
-    name: String,
+pub struct CreateRequestParams {
+    pub name: String,
     #[serde(rename = "hostid")]
-    host_id: String,
-    steps: Vec<WebScenarioStep>,
-    delay: String,
-    retries: u8
+    pub host_id: String,
+    pub steps: Vec<WebScenarioStep>,
+    pub delay: String,
+    pub retries: u8
 }
 
 #[derive(Serialize)]
-struct WebScenarioStep {
-    name: String,
-    url: String,
-    status_codes: String,
-    no: u8
+pub struct WebScenarioStep {
+    pub name: String,
+    pub url: String,
+    pub status_codes: String,
+    pub no: u8
 }
 
 pub fn find_web_scenarios(client: &reqwest::blocking::Client,
