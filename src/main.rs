@@ -12,30 +12,25 @@ use clap::{App, Arg, SubCommand};
 use regex::Regex;
 use reqwest::blocking::Client;
 
-use crate::auth::login_to_zabbix_api;
 use crate::config::{load_config_from_file, ZabbixApiVersion, ZabbixConfig};
-use crate::hosts::{find_hosts, ZabbixHost};
-use crate::items::{find_zabbix_items, ZabbixItem};
 use crate::logging::get_logging_config;
-use crate::template::{get_template_vars, process_template_string};
-use crate::triggers::{create_trigger, find_zabbix_trigger};
-use crate::types::{EmptyResult, OperationResult};
-use crate::webscenarios::{create_web_scenario, find_web_scenarios, ZabbixWebScenario};
+use crate::types::EmptyResult;
+use crate::zabbix::auth::login_to_zabbix_api;
+use crate::zabbix::find::find_zabbix_objects;
+use crate::zabbix::hosts::ZabbixHost;
+use crate::zabbix::items::ZabbixItem;
+use crate::zabbix::triggers::create::create_trigger_if_does_not_exists;
+use crate::zabbix::webscenarios::create::create_web_scenario_if_does_not_exists;
+use crate::zabbix::webscenarios::ZabbixWebScenario;
 
 mod types;
 
 mod config;
 
-mod zabbix;
-mod auth;
-
-mod items;
-mod webscenarios;
-mod triggers;
-mod hosts;
 mod logging;
 mod http;
 pub mod template;
+pub mod zabbix;
 
 const GENERATE_COMMAND: &str = "gen";
 const ITEM_KEY_SEARCH_MASK_ARG: &str = "item-key-starts-with";
@@ -73,7 +68,7 @@ fn main() {
             .arg(
                 Arg::with_name(ITEM_KEY_SEARCH_MASK_ARG)
                     .short(ITEM_KEY_SEARCH_MASK_ARG)
-                    .help("set search mask for items.")
+                    .help("set search mask for items")
                     .default_value(ITEM_KEY_SEARCH_MASK_DEFAULT_VALUE)
                     .long(ITEM_KEY_SEARCH_MASK_ARG).takes_value(true)
                     .required(false)
@@ -105,7 +100,7 @@ fn main() {
 
             match load_config_from_file(config_file_path) {
                 Ok(config) => {
-                    let client = reqwest::blocking::Client::new();
+                    let client = Client::new();
 
                     let item_key_search_mask: &str = if matches.is_present(ITEM_KEY_SEARCH_MASK_ARG) {
                         matches.value_of(ITEM_KEY_SEARCH_MASK_ARG).unwrap()
@@ -117,7 +112,7 @@ fn main() {
                         Err(_) => exit(ERROR_EXIT_CODE)
                     }
                 }
-                Err(_) => error!("unable to load config from file")
+                Err(e) => error!("config load error: {}", e)
             }
         }
         None => {}
@@ -136,9 +131,6 @@ fn create_web_scenarios_and_triggers(api_version: &ZabbixApiVersion,
                                          &zabbix_config.api.endpoint,
                                          &zabbix_config.api.username, &zabbix_config.api.password)
                                                     .context("zabbix api authentication error")?;
-
-    let partial_auth_token = truncate(&auth_token, 4);
-    debug!("login success: token '{partial_auth_token}..'");
 
     let zabbix_objects = find_zabbix_objects(client, zabbix_config, &auth_token, &item_key_search_mask)
         .context("unable to find zabbix objects")?;
@@ -169,40 +161,6 @@ fn create_web_scenarios_and_triggers(api_version: &ZabbixApiVersion,
     } else {
         Ok(())
     }
-}
-
-fn truncate(s: &str, max_chars: usize) -> &str {
-    match s.char_indices().nth(max_chars) {
-        None => s,
-        Some((idx, _)) => &s[..idx],
-    }
-}
-
-fn find_zabbix_objects(client: &Client, zabbix_config: &ZabbixConfig,
-                       auth_token: &str, item_key_search_mask: &str) ->
-                                                                OperationResult<ZabbixEntities> {
-
-    let items = find_zabbix_items(&client, &zabbix_config.api.endpoint,
-                      &auth_token, item_key_search_mask).context("unable to find zabbix items")?;
-
-    debug!("received items:");
-
-    let web_scenarios = find_web_scenarios(&client, &zabbix_config.api.endpoint, &auth_token).context("unable to find web scenarios")?;
-
-    debug!("web scenarios have been obtained");
-
-    let host_ids: Vec<String> = items.iter()
-        .map(|item| item.hostid.to_string()).collect();
-
-    let hosts = find_hosts(&client, &zabbix_config.api.endpoint, &auth_token, host_ids).context("unable to find hosts")?;
-
-    Ok(
-        ZabbixEntities {
-            items,
-            web_scenarios,
-            hosts
-        }
-    )
 }
 
 fn create_scenario_and_trigger_for_item(zabbix_config: &ZabbixConfig,
@@ -254,61 +212,7 @@ fn create_scenario_and_trigger_for_item(zabbix_config: &ZabbixConfig,
     }
 }
 
-fn create_web_scenario_if_does_not_exists(zabbix_config: &ZabbixConfig, auth_token: &str,
-                                          url: &str, client: &Client,
-                        zabbix_host: &ZabbixHost, zabbix_objects: &ZabbixEntities) -> EmptyResult {
-
-    let scenario_name = format!("Check index page '{url}'");
-
-    match zabbix_objects.web_scenarios.iter()
-        .find(|entity| entity.name == scenario_name) {
-        None => {
-            match create_web_scenario(
-                &client, &zabbix_config.api.endpoint, &auth_token,
-                &zabbix_config.scenario, &url, &zabbix_host.host_id) {
-                Ok(_) => info!("web scenario has been created for '{url}'"),
-                Err(e) => {
-                    error!("unable to create web scenario: {}", e);
-                    return Err(e)
-                }
-            }
-        }
-        Some(_) => info!("web scenario '{scenario_name}' already found, skip.")
-    }
-
-    Ok(())
-}
-
-fn create_trigger_if_does_not_exists(zabbix_config: &ZabbixConfig, auth_token: &str,
-                                     url: &str, client: &Client,
-                                     zabbix_host: &ZabbixHost) -> EmptyResult {
-    let template_vars = get_template_vars(&zabbix_host.host, &url);
-    let trigger_name = process_template_string(
-        &zabbix_config.trigger.name, &template_vars);
-
-    match find_zabbix_trigger(&client, &zabbix_config, &auth_token, &trigger_name) {
-        Ok(trigger) => {
-            if trigger.is_none() {
-                match create_trigger(&client,
-                                     &zabbix_config.api.endpoint, &auth_token,
-                                     &zabbix_config.trigger, &zabbix_host.host, &url) {
-                    Ok(_) => info!("trigger '{trigger_name}' has been created"),
-                    Err(e) =>
-                        error!("unable to create trigger '{trigger_name}': {}", e)
-                }
-
-            } else {
-                info!("trigger '{trigger_name}' already exists, skip")
-            }
-        }
-        Err(e) =>
-            error!("unable to find zabbix trigger by name '{trigger_name}': {}", e)
-    }
-
-    Ok(())
-}
-
-struct ZabbixEntities {
+pub struct ZabbixEntities {
     items: Vec<ZabbixItem>,
     web_scenarios: Vec<ZabbixWebScenario>,
     hosts: Vec<ZabbixHost>

@@ -1,6 +1,13 @@
 use serde::Deserialize;
 use serde::Serialize;
 
+pub mod triggers;
+pub mod items;
+pub mod auth;
+pub mod hosts;
+pub mod webscenarios;
+pub mod find;
+
 pub const JSONRPC: &str = "2.0";
 
 pub const UNSUPPORTED_RESPONSE_MESSAGE: &str = "unsupported zabbix api response";

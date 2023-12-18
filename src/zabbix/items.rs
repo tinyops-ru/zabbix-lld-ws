@@ -7,7 +7,7 @@ use serde::Serialize;
 
 use crate::http::send_post_request;
 use crate::types::OperationResult;
-use crate::zabbix::{UNSUPPORTED_RESPONSE_MESSAGE, ZABBIX_API_COMMUNICATION_ERROR, ZabbixError, ZabbixRequest};
+use crate::zabbix::{UNSUPPORTED_RESPONSE_MESSAGE, ZABBIX_API_COMMUNICATION_ERROR, ZabbixRequest};
 
 #[derive(Serialize)]
 struct ItemSearchParams {
@@ -17,8 +17,7 @@ struct ItemSearchParams {
 
 #[derive(Deserialize)]
 struct ItemSearchResponse {
-    result: Option<Vec<ZabbixItem>>,
-    error: Option<ZabbixError>
+    result: Option<Vec<ZabbixItem>>
 }
 
 #[derive(Deserialize, Debug)]
