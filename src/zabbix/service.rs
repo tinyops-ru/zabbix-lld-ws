@@ -4,7 +4,7 @@ use anyhow::{anyhow, Context};
 use reqwest::blocking::Client;
 use serde_derive::{Deserialize, Serialize};
 
-use crate::config::{WebScenarioConfig, ZabbixApiVersion};
+use crate::config::{WebScenarioConfig, ZabbixApiVersion, ZabbixTriggerConfig};
 use crate::http::send_post_request;
 use crate::template::{get_template_vars, process_template_string};
 use crate::types::{EmptyResult, OperationResult};
@@ -12,6 +12,9 @@ use crate::zabbix::{JSONRPC, log_zabbix_error, UNSUPPORTED_RESPONSE_MESSAGE, ZAB
 use crate::zabbix::hosts::{SearchRequestParams, ZabbixHost};
 use crate::zabbix::items::ZabbixItem;
 use crate::zabbix::search::{ItemSearchParams, ItemSearchResponse};
+use crate::zabbix::triggers::create::{CreateTriggerResponse, TriggerCreateRequestParams};
+use crate::zabbix::triggers::find::TriggerSearchResponse;
+use crate::zabbix::triggers::ZabbixTrigger;
 use crate::zabbix::webscenarios::{CreateRequestParams, GetSearchRequestParams, WebScenariosResponse, WebScenarioStep, ZabbixWebScenario};
 
 const UNABLE_TO_FIND_ZABBIX_HOSTS_ERROR: &str = "unable to find zabbix hosts";
@@ -23,10 +26,14 @@ pub trait ZabbixService {
 
     fn find_hosts(&self, auth_token: &str, ids: Vec<String>) -> OperationResult<Vec<ZabbixHost>>;
 
+    fn find_trigger(&self, auth_token: &str, name: &str) -> OperationResult<Option<ZabbixTrigger>>;
+
     fn find_web_scenarios(&self, auth_token: &str) -> OperationResult<Vec<ZabbixWebScenario>>;
 
     fn create_web_scenario(&self, auth_token: &str, url: &str, host_id: &str,
                            scenario_config: &WebScenarioConfig) -> EmptyResult;
+
+    fn create_trigger(&self, auth_token: &str, trigger_config: &ZabbixTriggerConfig, host: &str, url: &str) -> EmptyResult;
 }
 
 pub struct DefaultZabbixService {
@@ -125,6 +132,35 @@ impl ZabbixService for DefaultZabbixService {
         }
     }
 
+    fn find_trigger(&self, auth_token: &str, name: &str) -> OperationResult<Option<ZabbixTrigger>> {
+        let mut search_params = HashMap::new();
+        search_params.insert("description".to_string(), name.to_string());
+
+        let params = GetSearchRequestParams {
+            search: search_params
+        };
+
+        let request: ZabbixRequest<GetSearchRequestParams> = ZabbixRequest::new(
+            "trigger.get", params, auth_token
+        );
+
+        let response = send_post_request(&self.client, &self.zabbix_api_url, request)
+            .context(ZABBIX_API_COMMUNICATION_ERROR)?;
+
+        let search_response: TriggerSearchResponse = serde_json::from_str(&response)
+            .context(UNSUPPORTED_RESPONSE_MESSAGE)?;
+
+        if !search_response.result.is_empty() {
+            let trigger = search_response.result.first().unwrap();
+            debug!("trigger found: {:?}", &trigger);
+            Ok(Some(trigger.clone()))
+
+        } else {
+            info!("trigger wasn't found by name '{name}'");
+            Ok(None)
+        }
+    }
+
 
     fn find_web_scenarios(&self, auth_token: &str) -> OperationResult<Vec<ZabbixWebScenario>> {
         info!("searching web scenarios..");
@@ -188,6 +224,49 @@ impl ZabbixService for DefaultZabbixService {
         info!("web scenario has been created for '{url}'");
 
         Ok(())
+    }
+
+    fn create_trigger(&self, auth_token: &str, trigger_config: &ZabbixTriggerConfig, host: &str, url: &str) -> EmptyResult {
+        debug!("create trigger for host '{host}', url '{url}'");
+        debug!("trigger config '{:?}'", trigger_config);
+
+        let template_vars = get_template_vars(&host, &url);
+
+        let trigger_name = process_template_string(&trigger_config.name, &template_vars);
+        let expression = process_template_string(&trigger_config.value, &template_vars);
+
+        debug!("trigger name '{trigger_name}'");
+        debug!("trigger expression '{expression}'");
+
+        let params = TriggerCreateRequestParams {
+            description: trigger_name,
+            expression,
+            priority: "4".to_string(),
+            url: url.to_string(),
+
+        };
+
+        let request: ZabbixRequest<TriggerCreateRequestParams> = ZabbixRequest::new(
+            "trigger.create", params, &auth_token
+        );
+
+        let response = send_post_request(&self.client, &self.zabbix_api_url, request)
+            .context(ZABBIX_API_COMMUNICATION_ERROR)?;
+
+        let create_response: CreateTriggerResponse = serde_json::from_str(&response)
+            .context(UNSUPPORTED_RESPONSE_MESSAGE)?;
+
+        match create_response.error {
+            Some(_) => {
+                log_zabbix_error(&create_response.error);
+                error!("unable to create trigger for '{url}'");
+                Err(anyhow!("unable to create trigger for url"))
+            }
+            None => {
+                info!("trigger has been created for url '{url}'");
+                Ok(())
+            }
+        }
     }
 }
 

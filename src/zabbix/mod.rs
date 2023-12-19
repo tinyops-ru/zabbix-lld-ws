@@ -3,10 +3,8 @@ use serde::Serialize;
 
 pub mod triggers;
 pub mod items;
-pub mod auth;
 pub mod hosts;
 pub mod webscenarios;
-pub mod find;
 pub mod service;
 
 pub mod search;

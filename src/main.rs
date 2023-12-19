@@ -6,22 +6,13 @@ use std::env;
 use std::path::Path;
 use std::process::exit;
 
-use anyhow::anyhow;
-use anyhow::Context;
 use clap::{App, Arg, SubCommand};
-use regex::Regex;
 use reqwest::blocking::Client;
 
-use crate::config::{load_config_from_file, ZabbixConfig};
+use crate::command::generate::items::generate_web_scenarios_and_triggers_for_items;
+use crate::config::load_config_from_file;
 use crate::logging::get_logging_config;
-use crate::types::EmptyResult;
-use crate::zabbix::find::find_zabbix_objects;
-use crate::zabbix::hosts::ZabbixHost;
-use crate::zabbix::items::ZabbixItem;
-use crate::zabbix::service::{DefaultZabbixService, ZabbixService};
-use crate::zabbix::triggers::create::create_trigger_if_does_not_exists;
-use crate::zabbix::webscenarios::create::create_web_scenario_if_does_not_exists;
-use crate::zabbix::webscenarios::ZabbixWebScenario;
+use crate::zabbix::service::DefaultZabbixService;
 
 mod types;
 
@@ -31,6 +22,7 @@ mod logging;
 mod http;
 pub mod template;
 pub mod zabbix;
+pub mod command;
 
 const GENERATE_COMMAND: &str = "gen";
 const ITEM_KEY_SEARCH_MASK_ARG: &str = "item-key-starts-with";
@@ -102,14 +94,15 @@ fn main() {
                 Ok(config) => {
                     let client = Client::new();
 
-                    let zabbix_service = DefaultZabbixService::new(&config.zabbix.api.endpoint, &config.zabbix.api.version, &client);
+                    let zabbix_service = DefaultZabbixService::new(
+                        &config.zabbix.api.endpoint, &config.zabbix.api.version, &client);
 
                     let item_key_search_mask: &str = if matches.is_present(ITEM_KEY_SEARCH_MASK_ARG) {
                         matches.value_of(ITEM_KEY_SEARCH_MASK_ARG).unwrap()
                     } else { ITEM_KEY_SEARCH_MASK_DEFAULT_VALUE };
 
-                    match create_web_scenarios_and_triggers(&zabbix_service,
-                                    &client, &config.zabbix, &item_key_search_mask) {
+                    match generate_web_scenarios_and_triggers_for_items(&zabbix_service,
+                                    &config.zabbix, &item_key_search_mask) {
                         Ok(_) => exit(OK_EXIT_CODE),
                         Err(_) => exit(ERROR_EXIT_CODE)
                     }
@@ -123,97 +116,4 @@ fn main() {
     if !matched_command {
         matches.usage();
     }
-}
-
-fn create_web_scenarios_and_triggers(zabbix_service: &impl ZabbixService,
-                                     client: &Client, zabbix_config: &ZabbixConfig,
-                                     item_key_search_mask: &str) -> EmptyResult {
-
-    let auth_token = zabbix_service.get_session(&zabbix_config.api.username, &zabbix_config.api.password)
-                                          .context("zabbix api authentication error")?;
-
-    let zabbix_objects = find_zabbix_objects(zabbix_service, client, zabbix_config, &auth_token, &item_key_search_mask)
-        .context("unable to find zabbix objects")?;
-
-    let pattern_start = "^".to_string() + item_key_search_mask;
-    let pattern = pattern_start + "\\[(.*)\\]$";
-
-    let url_pattern = Regex::new(&pattern).context("invalid regular expressions")?;
-
-    let mut has_errors = false;
-
-    for item in &zabbix_objects.items {
-        debug!("item '{}'", item.name);
-
-        match create_scenario_and_trigger_for_item(zabbix_config, &auth_token,
-                                                   client, &url_pattern, &zabbix_objects, item) {
-            Ok(_) => {}
-            Err(e) => {
-                error!("{}", e);
-                has_errors = true
-            }
-        }
-    }
-
-    if has_errors {
-        Err(anyhow!("unable to create web scenarios and trigger"))
-
-    } else {
-        Ok(())
-    }
-}
-
-fn create_scenario_and_trigger_for_item(zabbix_config: &ZabbixConfig,
-                                        auth_token: &str, client: &Client,
-                                        url_pattern: &Regex, zabbix_objects: &ZabbixEntities,
-                                        zabbix_item: &ZabbixItem) -> EmptyResult {
-    let mut has_errors = false;
-
-    debug!("---------------------------");
-    debug!("item: {}", zabbix_item.name);
-
-    if url_pattern.is_match(&zabbix_item.key_) {
-        let groups = url_pattern.captures_iter(&zabbix_item.key_).next()
-                                                        .context("unable to get regexp group")?;
-        let url = String::from(&groups[1]);
-        debug!("- url '{url}'");
-
-        match zabbix_objects.hosts.iter()
-            .find(|host| host.host_id == zabbix_item.hostid) {
-            Some(host) => {
-
-                match create_web_scenario_if_does_not_exists(&zabbix_config, &auth_token, &url, &client, &host, &zabbix_objects) {
-                    Ok(_) => {
-                        match create_trigger_if_does_not_exists(&zabbix_config, &auth_token, &url, &client, &host) {
-                            Ok(_) => {}
-                            Err(_) => {}
-                        }
-                    }
-                    Err(_) => {}
-                }
-
-            }
-            None => {
-                error!("host wasn't found by id {}", zabbix_item.hostid);
-                has_errors = true;
-            }
-        }
-
-    } else {
-        error!("unsupported item format");
-        has_errors = true;
-    }
-
-    if has_errors {
-        Err(anyhow!("unable to create web scenario and trigger for item"))
-
-    } else {
-        Ok(())
-    }
-}
-
-pub struct ZabbixEntities {
-    items: Vec<ZabbixItem>,
-    web_scenarios: Vec<ZabbixWebScenario>,
-    hosts: Vec<ZabbixHost>
 }

@@ -1,10 +1,7 @@
 use std::collections::HashMap;
 
-use anyhow::Context;
 use serde::Deserialize;
 use serde::Serialize;
-
-pub mod create;
 
 #[derive(Deserialize, Debug)]
 pub struct ZabbixWebScenario {
