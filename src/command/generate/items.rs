@@ -73,7 +73,13 @@ pub fn generate_web_scenarios_and_triggers_for_items(zabbix_service: &impl Zabbi
                         Ok(trigger_found) => {
                             match trigger_found {
                                 None => {
-                                    // TODO
+                                    match zabbix_service.create_trigger(&auth_token, &zabbix_config.trigger, &host.host, &url) {
+                                        Ok(_) => info!("trigger '{trigger_name}' has been created"),
+                                        Err(e) => {
+                                            error!("unable to create zabbix trigger: {}", e);
+                                            has_errors = true;
+                                        }
+                                    }
                                 }
                                 Some(_) => info!("trigger '{trigger_name}' already exists, skip")
                             }
@@ -95,7 +101,7 @@ pub fn generate_web_scenarios_and_triggers_for_items(zabbix_service: &impl Zabbi
     }
 
     if has_errors {
-        Err(anyhow!("unable to create web scenarios and trigger"))
+        Err(anyhow!("unable to create web scenarios and triggers"))
 
     } else {
         Ok(())
