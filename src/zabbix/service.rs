@@ -303,20 +303,92 @@ mod auth_tests {
 
     use crate::config::ZabbixApiVersion;
     use crate::tests::init_logging;
+    use crate::tests::integration::{are_integration_tests_enabled, get_integration_tests_config};
     use crate::zabbix::service::{DefaultZabbixService, ZabbixService};
 
-    #[ignore]
     #[test]
     fn session_should_be_returned() {
         init_logging();
 
-        let client = Client::new();
-        let service = DefaultZabbixService::new(
-            "https://zabbix.company.com/api_jsonrpc.php", &ZabbixApiVersion::V6, &client);
+        if are_integration_tests_enabled() {
+            let tests_config = get_integration_tests_config();
 
-        match service.get_session("CHANGE-ME", "CHANGE-ME") {
-            Ok(session) => assert!(!session.is_empty()),
-            Err(e) => panic!("{}", e)
+            let client = Client::new();
+            let service = DefaultZabbixService::new(
+                &tests_config.zabbix_api_url, &ZabbixApiVersion::V6, &client);
+
+            match service.get_session(&tests_config.zabbix_api_user, &tests_config.zabbix_api_password) {
+                Ok(session) => {
+                    assert!(!session.is_empty())
+                },
+                Err(e) => panic!("{}", e)
+            }
         }
     }
 }
+
+#[cfg(test)]
+mod find_items_tests {
+    use reqwest::blocking::Client;
+
+    use crate::config::ZabbixApiVersion;
+    use crate::tests::init_logging;
+    use crate::tests::integration::{are_integration_tests_enabled, get_integration_tests_config};
+    use crate::zabbix::service::{DefaultZabbixService, ZabbixService};
+
+    #[test]
+    fn items_should_be_returned() {
+        init_logging();
+
+        if are_integration_tests_enabled() {
+            let tests_config = get_integration_tests_config();
+
+            let client = Client::new();
+            let service = DefaultZabbixService::new(
+                &tests_config.zabbix_api_url, &ZabbixApiVersion::V6, &client);
+
+            let auth_token = service.get_session(&tests_config.zabbix_api_user,
+                                                 &tests_config.zabbix_api_password).expect("auth error");
+
+            let items = service.find_items(&auth_token, "system.cpu.util").unwrap();
+
+            assert!(!items.is_empty());
+        }
+    }
+}
+
+#[cfg(test)]
+mod find_hosts_tests {
+    use reqwest::blocking::Client;
+
+    use crate::config::ZabbixApiVersion;
+    use crate::tests::init_logging;
+    use crate::tests::integration::{are_integration_tests_enabled, get_integration_tests_config};
+    use crate::zabbix::service::{DefaultZabbixService, ZabbixService};
+
+    #[test]
+    fn hosts_should_be_returned() {
+        init_logging();
+
+        if are_integration_tests_enabled() {
+            let tests_config = get_integration_tests_config();
+
+            let client = Client::new();
+            let service = DefaultZabbixService::new(
+                &tests_config.zabbix_api_url, &ZabbixApiVersion::V6, &client);
+
+            let auth_token = service.get_session(&tests_config.zabbix_api_user,
+                                                 &tests_config.zabbix_api_password).expect("auth error");
+
+            let hosts = service.find_hosts(&auth_token, vec![tests_config.example_host_id.to_string()]).unwrap();
+
+            assert!(!hosts.is_empty());
+
+            let host = hosts.first().unwrap();
+
+            assert_eq!(host.host_id, tests_config.example_host_id.to_string());
+            assert_eq!(host.host, tests_config.example_host_name.to_string());
+        }
+    }
+}
+
