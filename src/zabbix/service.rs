@@ -165,7 +165,7 @@ impl ZabbixService for DefaultZabbixService {
         info!("searching web scenarios..");
 
         let mut search_params = HashMap::new();
-        search_params.insert("key_".to_string(), key_starts_with.to_string());
+        search_params.insert("name".to_string(), key_starts_with.to_string());
 
         let params = GetSearchRequestParams {
             search: search_params
@@ -417,8 +417,6 @@ mod find_trigger_tests {
 
             match service.find_trigger(&auth_token, &tests_config.example_trigger_name) {
                 Ok(trigger_found) => {
-                    let trigger_found = service.find_trigger(&auth_token, &tests_config.example_trigger_name).unwrap();
-
                     match trigger_found {
                         Some(trigger) => {
                             assert_eq!(trigger.name, tests_config.example_trigger_name);
@@ -432,3 +430,39 @@ mod find_trigger_tests {
     }
 }
 
+#[cfg(test)]
+mod find_webscenarios_tests {
+    use reqwest::blocking::Client;
+
+    use crate::config::ZabbixApiVersion;
+    use crate::tests::init_logging;
+    use crate::tests::integration::{are_integration_tests_enabled, get_integration_tests_config};
+    use crate::zabbix::service::{DefaultZabbixService, ZabbixService};
+
+    #[test]
+    fn scenarios_should_be_returned() {
+        init_logging();
+
+        if are_integration_tests_enabled() {
+            let tests_config = get_integration_tests_config();
+
+            let client = Client::new();
+            let service = DefaultZabbixService::new(
+                &tests_config.zabbix_api_url, &ZabbixApiVersion::V6, &client);
+
+            let auth_token = service.get_session(&tests_config.zabbix_api_user,
+                                                 &tests_config.zabbix_api_password).expect("auth error");
+
+            match service.find_web_scenarios(&auth_token, &tests_config.example_webscenario_name) {
+                Ok(webscenarios) => {
+                    assert!(!webscenarios.is_empty());
+
+                    let webscenario = webscenarios.first().unwrap();
+
+                    assert!(webscenario.name.starts_with(&tests_config.example_webscenario_name.to_string()))
+                }
+                Err(e) => error!("{}", e)
+            }
+        }
+    }
+}
