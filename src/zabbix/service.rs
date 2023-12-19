@@ -392,3 +392,43 @@ mod find_hosts_tests {
     }
 }
 
+#[cfg(test)]
+mod find_trigger_tests {
+    use reqwest::blocking::Client;
+
+    use crate::config::ZabbixApiVersion;
+    use crate::tests::init_logging;
+    use crate::tests::integration::{are_integration_tests_enabled, get_integration_tests_config};
+    use crate::zabbix::service::{DefaultZabbixService, ZabbixService};
+
+    #[test]
+    fn trigger_should_be_returned() {
+        init_logging();
+
+        if are_integration_tests_enabled() {
+            let tests_config = get_integration_tests_config();
+
+            let client = Client::new();
+            let service = DefaultZabbixService::new(
+                &tests_config.zabbix_api_url, &ZabbixApiVersion::V6, &client);
+
+            let auth_token = service.get_session(&tests_config.zabbix_api_user,
+                                                 &tests_config.zabbix_api_password).expect("auth error");
+
+            match service.find_trigger(&auth_token, &tests_config.example_trigger_name) {
+                Ok(trigger_found) => {
+                    let trigger_found = service.find_trigger(&auth_token, &tests_config.example_trigger_name).unwrap();
+
+                    match trigger_found {
+                        Some(trigger) => {
+                            assert_eq!(trigger.name, tests_config.example_trigger_name);
+                        }
+                        None => panic!("trigger expected")
+                    }
+                }
+                Err(e) => error!("{}", e)
+            }
+        }
+    }
+}
+
