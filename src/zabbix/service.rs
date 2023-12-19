@@ -517,3 +517,41 @@ mod create_webscenario_tests {
         }
     }
 }
+
+#[cfg(test)]
+mod create_trigger_tests {
+    use reqwest::blocking::Client;
+
+    use crate::config::{ZabbixApiVersion, ZabbixTriggerConfig};
+    use crate::tests::init_logging;
+    use crate::tests::integration::{are_integration_tests_enabled, get_integration_tests_config};
+    use crate::zabbix::service::{DefaultZabbixService, ZabbixService};
+
+    #[test]
+    fn trigger_should_be_created() {
+        init_logging();
+
+        if are_integration_tests_enabled() {
+            let tests_config = get_integration_tests_config();
+
+            let client = Client::new();
+            let service = DefaultZabbixService::new(
+                &tests_config.zabbix_api_url, &ZabbixApiVersion::V6, &client);
+
+            let auth_token = service.get_session(&tests_config.zabbix_api_user,
+                                                 &tests_config.zabbix_api_password).expect("auth error");
+
+            let trigger_config = ZabbixTriggerConfig {
+                name: "WSZL TRIGGER CREATE TEST".to_string(),
+                value: format!("last(/{}/system.cpu.util[,idle])>5", tests_config.example_host_name),
+            };
+
+            match service.create_trigger(&auth_token, &trigger_config, &tests_config.example_host_name, "whatever") {
+                Ok(_) => {
+                    assert!(service.find_trigger(&auth_token, &trigger_config.name).expect("unable to find trigger").is_some());
+                }
+                Err(e) => panic!("trigger create error: {}", e)
+            }
+        }
+    }
+}
