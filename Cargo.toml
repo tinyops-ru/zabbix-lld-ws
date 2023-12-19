@@ -10,12 +10,6 @@ lto = true
 codegen-units = 1
 panic = 'abort'
 
-[target.x86_64-unknown-linux-gnu]
-pre-build = [
-    "dpkg --add-architecture $CROSS_DEB_ARCH",
-    "apt-get update && apt-get install --assume-yes libssl-dev:$CROSS_DEB_ARCH"
-]
-
 [dependencies]
 anyhow = "1.0.75"
 
@@ -36,3 +30,7 @@ regex = "1.10.2"
 
 log = "0.4.20"
 log4rs = "1.2.0"
+
+[dev-dependencies]
+env_logger = "0.9.3"
+fake = "2.9.1"

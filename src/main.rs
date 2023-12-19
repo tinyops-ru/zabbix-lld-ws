@@ -24,6 +24,9 @@ pub mod template;
 pub mod zabbix;
 pub mod command;
 
+#[cfg(test)]
+pub mod tests;
+
 const GENERATE_COMMAND: &str = "gen";
 const ITEM_KEY_SEARCH_MASK_ARG: &str = "item-key-starts-with";
 const ITEM_KEY_SEARCH_MASK_DEFAULT_VALUE: &str = "vhost.item";

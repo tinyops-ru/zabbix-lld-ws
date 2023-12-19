@@ -296,3 +296,27 @@ fn get_params(api_version: &ZabbixApiVersion,
         ("password".to_string(), password.to_string()),
     ])
 }
+
+#[cfg(test)]
+mod auth_tests {
+    use reqwest::blocking::Client;
+
+    use crate::config::ZabbixApiVersion;
+    use crate::tests::init_logging;
+    use crate::zabbix::service::{DefaultZabbixService, ZabbixService};
+
+    #[ignore]
+    #[test]
+    fn session_should_be_returned() {
+        init_logging();
+
+        let client = Client::new();
+        let service = DefaultZabbixService::new(
+            "https://zabbix.company.com/api_jsonrpc.php", &ZabbixApiVersion::V6, &client);
+
+        match service.get_session("CHANGE-ME", "CHANGE-ME") {
+            Ok(session) => assert!(!session.is_empty()),
+            Err(e) => panic!("{}", e)
+        }
+    }
+}
