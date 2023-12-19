@@ -466,3 +466,54 @@ mod find_webscenarios_tests {
         }
     }
 }
+
+#[cfg(test)]
+mod create_webscenario_tests {
+    use reqwest::blocking::Client;
+
+    use crate::config::{WebScenarioConfig, ZabbixApiVersion};
+    use crate::tests::init_logging;
+    use crate::tests::integration::{are_integration_tests_enabled, get_integration_tests_config};
+    use crate::zabbix::service::{DefaultZabbixService, ZabbixService};
+
+    #[test]
+    fn webscenario_should_be_created() {
+        init_logging();
+
+        if are_integration_tests_enabled() {
+            let tests_config = get_integration_tests_config();
+
+            let client = Client::new();
+            let service = DefaultZabbixService::new(
+                &tests_config.zabbix_api_url, &ZabbixApiVersion::V6, &client);
+
+            let auth_token = service.get_session(&tests_config.zabbix_api_user,
+                                                 &tests_config.zabbix_api_password).expect("auth error");
+
+            let scenario_config = WebScenarioConfig {
+                key_starts_with: "wszl test".to_string(),
+                name: "wszl test".to_string(),
+                response_timeout: "60s".to_string(),
+                expect_status_code: "200".to_string(),
+                attempts: 1,
+                update_interval: "30s".to_string(),
+            };
+
+            match service.create_web_scenario(
+                &auth_token, "https://github.com", &tests_config.example_host_id, &scenario_config) {
+                Ok(_) => {
+                    match service.find_web_scenarios(&auth_token, "wszl test") {
+                        Ok(results) => {
+                            assert!(!results.is_empty());
+
+                            let result = results.first().unwrap();
+                            assert_eq!(result.name, scenario_config.name);
+                        }
+                        Err(e) => panic!("scenario search error: {}", e)
+                    }
+                },
+                Err(e) => panic!("scenario creation error: {}", e)
+            }
+        }
+    }
+}
