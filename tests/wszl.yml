@@ -10,6 +10,7 @@ zabbix:
     value: "last(/${HOST}/web.test.fail[Check index page '${URL}'])<>0"
 
   scenario:
+    key-starts-with: "blablabla"
     name: "Check index page '${URL}'"
     response-timeout: "15s"
     expect-status-code: "200"

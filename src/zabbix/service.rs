@@ -28,7 +28,7 @@ pub trait ZabbixService {
 
     fn find_trigger(&self, auth_token: &str, name: &str) -> OperationResult<Option<ZabbixTrigger>>;
 
-    fn find_web_scenarios(&self, auth_token: &str) -> OperationResult<Vec<ZabbixWebScenario>>;
+    fn find_web_scenarios(&self, auth_token: &str, key_starts_with: &str) -> OperationResult<Vec<ZabbixWebScenario>>;
 
     fn create_web_scenario(&self, auth_token: &str, url: &str, host_id: &str,
                            scenario_config: &WebScenarioConfig) -> EmptyResult;
@@ -161,12 +161,11 @@ impl ZabbixService for DefaultZabbixService {
         }
     }
 
-
-    fn find_web_scenarios(&self, auth_token: &str) -> OperationResult<Vec<ZabbixWebScenario>> {
+    fn find_web_scenarios(&self, auth_token: &str, key_starts_with: &str) -> OperationResult<Vec<ZabbixWebScenario>> {
         info!("searching web scenarios..");
 
         let mut search_params = HashMap::new();
-        search_params.insert("key_".to_string(), "Check index page '".to_string());
+        search_params.insert("key_".to_string(), key_starts_with.to_string());
 
         let params = GetSearchRequestParams {
             search: search_params

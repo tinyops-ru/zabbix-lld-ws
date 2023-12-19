@@ -80,6 +80,7 @@ impl Display for ZabbixApiVersion {
 #[derive(PartialEq, Deserialize, Clone, Debug)]
 #[serde(rename_all = "kebab-case")]
 pub struct WebScenarioConfig {
+    pub key_starts_with: String,
     pub name: String,
     pub response_timeout: String,
     pub expect_status_code: String,
@@ -141,6 +142,7 @@ mod tests {
                         },
 
                         scenario: WebScenarioConfig {
+                            key_starts_with: "blablabla".to_string(),
                             name: "Check index page '${URL}'".to_string(),
                             response_timeout: "15s".to_string(),
                             expect_status_code: "200".to_string(),

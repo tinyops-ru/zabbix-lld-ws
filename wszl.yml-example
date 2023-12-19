@@ -17,6 +17,9 @@ zabbix:
     #value: "${HOST}:web.test.fail[Check index page '${URL}'].last()"
 
   scenario:
+    # Search existing elements
+    key-starts-with: "Check index page '"
+
     # Template variables are supported: ${HOST}, ${URL}
     name: "Check index page '${URL}'"
     response-timeout: "15s"

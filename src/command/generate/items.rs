@@ -18,8 +18,8 @@ pub fn generate_web_scenarios_and_triggers_for_items(zabbix_service: &impl Zabbi
 
     debug!("received items:");
 
-    let web_scenarios = zabbix_service.find_web_scenarios(&auth_token)
-        .context("unable to find web scenarios")?;
+    let web_scenarios = zabbix_service.find_web_scenarios(
+        &auth_token, &zabbix_config.scenario.key_starts_with).context("unable to find web scenarios")?;
 
     debug!("web scenarios have been obtained");
 
