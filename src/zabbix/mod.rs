@@ -9,6 +9,8 @@ pub mod webscenarios;
 pub mod find;
 pub mod service;
 
+pub mod search;
+
 pub const JSONRPC: &str = "2.0";
 
 pub const UNSUPPORTED_RESPONSE_MESSAGE: &str = "unsupported zabbix api response";

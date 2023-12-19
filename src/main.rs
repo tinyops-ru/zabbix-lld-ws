@@ -12,13 +12,13 @@ use clap::{App, Arg, SubCommand};
 use regex::Regex;
 use reqwest::blocking::Client;
 
-use crate::config::{load_config_from_file, ZabbixApiVersion, ZabbixConfig};
+use crate::config::{load_config_from_file, ZabbixConfig};
 use crate::logging::get_logging_config;
 use crate::types::EmptyResult;
-use crate::zabbix::auth::login_to_zabbix_api;
 use crate::zabbix::find::find_zabbix_objects;
 use crate::zabbix::hosts::ZabbixHost;
 use crate::zabbix::items::ZabbixItem;
+use crate::zabbix::service::{DefaultZabbixService, ZabbixService};
 use crate::zabbix::triggers::create::create_trigger_if_does_not_exists;
 use crate::zabbix::webscenarios::create::create_web_scenario_if_does_not_exists;
 use crate::zabbix::webscenarios::ZabbixWebScenario;
@@ -102,11 +102,13 @@ fn main() {
                 Ok(config) => {
                     let client = Client::new();
 
+                    let zabbix_service = DefaultZabbixService::new(&config.zabbix.api.endpoint, &config.zabbix.api.version, &client);
+
                     let item_key_search_mask: &str = if matches.is_present(ITEM_KEY_SEARCH_MASK_ARG) {
                         matches.value_of(ITEM_KEY_SEARCH_MASK_ARG).unwrap()
                     } else { ITEM_KEY_SEARCH_MASK_DEFAULT_VALUE };
 
-                    match create_web_scenarios_and_triggers(&config.zabbix.api.version,
+                    match create_web_scenarios_and_triggers(&zabbix_service,
                                     &client, &config.zabbix, &item_key_search_mask) {
                         Ok(_) => exit(OK_EXIT_CODE),
                         Err(_) => exit(ERROR_EXIT_CODE)
@@ -123,16 +125,14 @@ fn main() {
     }
 }
 
-fn create_web_scenarios_and_triggers(api_version: &ZabbixApiVersion,
+fn create_web_scenarios_and_triggers(zabbix_service: &impl ZabbixService,
                                      client: &Client, zabbix_config: &ZabbixConfig,
                                      item_key_search_mask: &str) -> EmptyResult {
 
-    let auth_token = login_to_zabbix_api(&api_version, &client,
-                                         &zabbix_config.api.endpoint,
-                                         &zabbix_config.api.username, &zabbix_config.api.password)
-                                                    .context("zabbix api authentication error")?;
+    let auth_token = zabbix_service.get_session(&zabbix_config.api.username, &zabbix_config.api.password)
+                                          .context("zabbix api authentication error")?;
 
-    let zabbix_objects = find_zabbix_objects(client, zabbix_config, &auth_token, &item_key_search_mask)
+    let zabbix_objects = find_zabbix_objects(zabbix_service, client, zabbix_config, &auth_token, &item_key_search_mask)
         .context("unable to find zabbix objects")?;
 
     let pattern_start = "^".to_string() + item_key_search_mask;
