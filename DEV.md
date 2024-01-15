@@ -2,11 +2,27 @@
 
 ## Integration tests
 
-Define environment variables:
-- `WSZL_ZABBIX_API_URL` - i.e. `https://zabbix.company.com/api_jsonrpc.php`
-- `WSZL_ZABBIX_API_USER`
-- `WSZL_ZABBIX_API_PASSWORD`
-- `WSZL_EXAMPLE_HOST_ID` - i.e. `10678`
-- `WSZL_EXAMPLE_HOST_NAME` - i.e. `zabbix`
-- `WSZL_EXAMPLE_TRIGGER_NAME` - i.e. `Site 'https://company.com' is unavailable`
-- `WSZL_EXAMPLE_WEBSCENARIO_NAME` - search mask i.e. `Check index page '`
+**Requirements:**
+
+- docker
+- [vhdt tool](https://github.com/lebe-dev/vhost-discovery-tool) installed
+
+Start fresh Zabbix Server:
+
+```shell
+rm -rf data
+docker-compose up -d
+```
+
+Login to Zabbix with Admin http://localhost:3080 with creds: `Admin` / `zabbix`.
+
+Create host `test`.
+
+Use `vhdt` tool at least once it will create required host items.
+
+Then run tests:
+
+```shell
+chmod +x run-integration-tests.sh
+./run-integration-tests.sh
+```

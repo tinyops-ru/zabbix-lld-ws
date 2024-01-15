@@ -1,0 +1,48 @@
+version: '3.5'
+services:
+  zabbix-server:
+    image: zabbix/zabbix-server-mysql:ubuntu-6.2-latest
+    ports:
+      - "10051:10051"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    env_file:
+      - ./.env_db_mysql
+      - ./.env_srv
+    depends_on:
+      - mysql-server
+    stop_grace_period: 30s
+    sysctls:
+      - net.ipv4.ip_local_port_range=1024 65000
+      - net.ipv4.conf.all.accept_redirects=0
+      - net.ipv4.conf.all.secure_redirects=0
+      - net.ipv4.conf.all.send_redirects=0
+
+  zabbix-web-nginx-mysql:
+    image: zabbix/zabbix-web-nginx-mysql:ubuntu-6.2-latest
+    ports:
+      - "3080:8080"
+      - "443:8443"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    env_file:
+      - ./.env_db_mysql
+      - ./.env_web
+    depends_on:
+      - mysql-server
+      - zabbix-server
+    stop_grace_period: 10s
+    sysctls:
+      - net.core.somaxconn=65535
+
+  mysql-server:
+    image: mysql:8.0-oracle
+    command:
+      - mysqld
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_bin
+      - --default-authentication-plugin=mysql_native_password
+    volumes:
+      - ./zbx_env/var/lib/mysql:/var/lib/mysql:rw
+    env_file:
+      - ./env_vars/.env_db_mysql

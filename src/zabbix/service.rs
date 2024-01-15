@@ -55,6 +55,8 @@ impl DefaultZabbixService {
 
 impl ZabbixService for DefaultZabbixService {
     fn get_session(&self, username: &str, token: &str) -> OperationResult<String> {
+        info!("getting session for '{username}'..");
+
         let auth_request = AuthRequest {
             jsonrpc: JSONRPC.to_string(),
             method: "user.login".to_string(),
@@ -64,7 +66,7 @@ impl ZabbixService for DefaultZabbixService {
         };
 
         let response = send_post_request(&self.client, &self.zabbix_api_url, auth_request)
-            .context(ZABBIX_API_COMMUNICATION_ERROR)?;
+                                                        .context(ZABBIX_API_COMMUNICATION_ERROR)?;
 
         let auth_response = serde_json::from_str::<AuthResponse>(&response)
             .context("authentication error")?;
@@ -307,7 +309,7 @@ mod auth_tests {
     use crate::zabbix::service::{DefaultZabbixService, ZabbixService};
 
     #[test]
-    fn session_should_be_returned() {
+    fn integration_test_session_should_be_returned() {
         init_logging();
 
         if are_integration_tests_enabled() {
@@ -337,7 +339,7 @@ mod find_items_tests {
     use crate::zabbix::service::{DefaultZabbixService, ZabbixService};
 
     #[test]
-    fn items_should_be_returned() {
+    fn integration_test_items_should_be_returned() {
         init_logging();
 
         if are_integration_tests_enabled() {
@@ -367,7 +369,7 @@ mod find_hosts_tests {
     use crate::zabbix::service::{DefaultZabbixService, ZabbixService};
 
     #[test]
-    fn hosts_should_be_returned() {
+    fn integration_test_hosts_should_be_returned() {
         init_logging();
 
         if are_integration_tests_enabled() {
@@ -402,7 +404,7 @@ mod find_trigger_tests {
     use crate::zabbix::service::{DefaultZabbixService, ZabbixService};
 
     #[test]
-    fn trigger_should_be_returned() {
+    fn integration_test_trigger_should_be_returned() {
         init_logging();
 
         if are_integration_tests_enabled() {
@@ -440,7 +442,7 @@ mod find_webscenarios_tests {
     use crate::zabbix::service::{DefaultZabbixService, ZabbixService};
 
     #[test]
-    fn scenarios_should_be_returned() {
+    fn integration_test_scenarios_should_be_returned() {
         init_logging();
 
         if are_integration_tests_enabled() {
@@ -477,7 +479,7 @@ mod create_webscenario_tests {
     use crate::zabbix::service::{DefaultZabbixService, ZabbixService};
 
     #[test]
-    fn webscenario_should_be_created() {
+    fn integration_test_webscenario_should_be_created() {
         init_logging();
 
         if are_integration_tests_enabled() {
@@ -528,7 +530,7 @@ mod create_trigger_tests {
     use crate::zabbix::service::{DefaultZabbixService, ZabbixService};
 
     #[test]
-    fn trigger_should_be_created() {
+    fn integration_test_trigger_should_be_created() {
         init_logging();
 
         if are_integration_tests_enabled() {

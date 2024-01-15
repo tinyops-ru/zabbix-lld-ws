@@ -1,20 +1,15 @@
 zabbix:
   api:
     version: 6
-    endpoint: https://zabbix.company.com/api_jsonrpc.php
-    username: CHANGE-ME
-    password: CHANGE-ME
+    endpoint: http://localhost:3080/api_jsonrpc.php
+    username: Admin
+    password: zabbix
 
   trigger:
     name: "Site '${URL}' is unavailable"
 
-    # Zabbix 6
     # Template variables are supported: ${HOST}, ${URL}
-    value: "last(/${HOST}/web.test.fail[Check index page '${URL}'])<>0"
-
-    # Zabbix 5
-    # Template variables are supported: ${HOST}, ${URL}
-    #value: "${HOST}:web.test.fail[Check index page '${URL}'].last()"
+    value: "${HOST}:web.test.fail[Check index page '${URL}'].last()"
 
   scenario:
     # Search existing elements
