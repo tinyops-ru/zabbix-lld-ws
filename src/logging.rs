@@ -45,7 +45,7 @@ fn get_file_appender() -> FileAppender {
     FileAppender::builder()
         .encoder(get_encoder())
         .build(LOG_FILE_PATH)
-        .unwrap()
+        .expect("unable to create log file")
 }
 
 fn get_encoder() -> Box<PatternEncoder> {
