@@ -16,7 +16,7 @@ See [INSTALL.md](INSTALL.md).
 #### Generate items and triggers
 
 ```
-$ wszl gen
+$ wszl --log-level=info -d /etc/zabbix gen
 ```
 
 #### Configuration

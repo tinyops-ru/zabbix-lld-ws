@@ -10,7 +10,7 @@
     ```
 4. Create config file `/etc/zabbix/wszl.yml`:
     ```bash
-    cp wszl.yml-example /etc/zabbix/wszl.yml
+    cp wszl.yml-dist /etc/zabbix/wszl.yml
     ```
 
    Update permissions:
@@ -21,7 +21,7 @@
 
 5. Add cron task (i.e. `/var/spool/cron/zabbix`):
     ```
-    */30 * * * * /etc/zabbix/wszl gen
+    */30 * * * * /etc/zabbix/wszl --log-level=info -d /etc/zabbix gen
     ```   
    Every 30 minutes tool will generate required items.
 
