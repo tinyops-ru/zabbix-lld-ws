@@ -8,7 +8,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     env_file:
       - ./.env_db_mysql
-      - ./.env_srv
+      - ./.env_web
     depends_on:
       - mysql-server
     stop_grace_period: 30s
@@ -43,6 +43,6 @@ services:
       - --collation-server=utf8mb4_bin
       - --default-authentication-plugin=mysql_native_password
     volumes:
-      - ./zbx_env/var/lib/mysql:/var/lib/mysql:rw
+      - ./data:/var/lib/mysql:rw
     env_file:
-      - ./env_vars/.env_db_mysql
+      - ./.env_db_mysql
