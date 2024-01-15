@@ -49,12 +49,14 @@ pub fn generate_web_scenarios_and_triggers_for_items(zabbix_service: &impl Zabbi
                 .find(|host| host.host_id == item.hostid) {
                 Some(host) => {
 
+                    // TODO: able to customize
                     let scenario_name = format!("Check index page '{url}'");
 
                     match web_scenarios.iter()
                         .find(|entity| entity.name == scenario_name) {
                         None => {
-                            match zabbix_service.create_web_scenario(&auth_token, &url, &host.host_id, &zabbix_config.scenario) {
+                            match zabbix_service.create_web_scenario(
+                                &auth_token, &url, &host.host_id, &zabbix_config.scenario) {
                                 Ok(_) => info!("web scenario has been created for '{url}'"),
                                 Err(e) => {
                                     error!("unable to create web scenario: {}", e);
@@ -100,10 +102,10 @@ pub fn generate_web_scenarios_and_triggers_for_items(zabbix_service: &impl Zabbi
         }
     }
 
-    if has_errors {
-        Err(anyhow!("unable to create web scenarios and triggers"))
+    if !has_errors {
+        Ok(())
 
     } else {
-        Ok(())
+        Err(anyhow!("unable to create web scenarios and triggers"))
     }
 }
