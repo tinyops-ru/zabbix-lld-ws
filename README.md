@@ -36,11 +36,7 @@ File `wszl.yml`.
 
 ## Zabbix API version
 
-```yaml
-zabbix:
-  api:
-    version: 6 # Supported values: 6, 5
-```
+[Zabbix API v6 only](https://www.zabbix.com/documentation/6.0/en/manual/api)
 
 ## Troubleshooting
 

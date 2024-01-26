@@ -56,11 +56,7 @@ $ wszl gen
 
 ## Версия Zabbix API
 
-```yaml
-zabbix:
-  api:
-    version: 6 # Поддерживаемые значения: 6, 5
-```
+Только [Zabbix API v6](https://www.zabbix.com/documentation/6.0/en/manual/api)
 
 ## Решение проблем
 
