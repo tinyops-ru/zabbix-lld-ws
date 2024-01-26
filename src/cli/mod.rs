@@ -6,7 +6,7 @@ use clap::{App, Arg, ArgMatches, SubCommand};
 use reqwest::blocking::Client;
 use zabbix_api::client::v6::ZabbixApiV6Client;
 
-use crate::command::generate::items::generate_web_scenarios_and_triggers_for_items;
+use crate::command::generate::items::generate_web_scenarios_and_triggers;
 use crate::config::load_config_from_file;
 use crate::logging::get_logging_config;
 use crate::source::file::FileUrlSourceProvider;
@@ -134,21 +134,25 @@ pub fn process_cli_commands(matches: &ArgMatches) {
                     } else { FILE_ARG_DEFAULT_VALUE };
 
                     if url_source_type == SOURCE_ARG_DEFAULT_VALUE {
-                        let provider = ZabbixUrlSourceProvider::new(
+                        let url_provider = ZabbixUrlSourceProvider::new(
                             &config.zabbix, zabbix_client.clone(), item_key_search_mask
                         );
 
-                        match generate_web_scenarios_and_triggers_for_items(&zabbix_client,
-                                                                            &config.zabbix, &item_key_search_mask) {
+                        match generate_web_scenarios_and_triggers(
+                            &zabbix_client, &config.zabbix.api.username, &config.zabbix.api.password, url_provider,
+                            &config.zabbix.scenario, &config.zabbix.trigger
+                        ) {
                             Ok(_) => exit(OK_EXIT_CODE),
                             Err(_) => exit(ERROR_EXIT_CODE)
                         }
 
                     } else if url_source_type == SOURCE_ARG_FILE_VALUE {
-                        let provider = FileUrlSourceProvider::new(filename);
+                        let url_provider = FileUrlSourceProvider::new(filename);
 
-                        match generate_web_scenarios_and_triggers_for_items(&zabbix_client,
-                                                                            &config.zabbix, &item_key_search_mask) {
+                        match generate_web_scenarios_and_triggers(
+                            &zabbix_client, &config.zabbix.api.username, &config.zabbix.api.password, url_provider,
+                            &config.zabbix.scenario, &config.zabbix.trigger
+                        ) {
                             Ok(_) => exit(OK_EXIT_CODE),
                             Err(_) => exit(ERROR_EXIT_CODE)
                         }

@@ -3,7 +3,6 @@ extern crate log;
 extern crate log4rs;
 
 use crate::cli::{get_cli_app, process_cli_commands};
-use crate::source::UrlSourceProvider;
 
 pub mod types;
 
