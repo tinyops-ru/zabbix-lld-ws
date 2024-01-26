@@ -26,6 +26,8 @@ serde_derive = "1.0.193"
 serde_repr = "0.1.17"
 serde_json = "1.0.108"
 
+zabbix-api = { git = "https://github.com/lebe-dev/zabbix-api-rs.git" }
+
 regex = "1.10.2"
 
 log = "0.4.20"
