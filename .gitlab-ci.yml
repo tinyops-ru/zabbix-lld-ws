@@ -20,7 +20,8 @@ build-debian:
       - wszl
       - README.md
       - README.RU.md
-      - wszl.yml-example
+      - wszl.yml-dist
+      - urls.txt-example
     expire_in: 1 week
 
   tags:
@@ -73,32 +74,33 @@ build-rhel7:
       - wszl
       - README.md
       - README.RU.md
+      - wszl.yml-dist
       - urls.txt-example
     expire_in: 1 week
 
   tags:
     - rhel7
 
-build-windows:
-  stage: build
-
-  only:
-    - main
-
-  script:
-    - cargo test
-    - cargo build --release
-    - copy target/release/zabbix-lld-ws.exe ./wszl.exe
-
-  artifacts:
-    name: wszl-windows
-    paths:
-      - wszl.exe
-      - README.md
-      - README.RU.md
-      - wszl.yml-dist
-      - urls.txt-example
-    expire_in: 1 week
-
-  tags:
-    - windows
+#build-windows:
+#  stage: build
+#
+#  only:
+#    - main
+#
+#  script:
+#    - cargo test
+#    - cargo build --release
+#    - copy target/release/zabbix-lld-ws.exe ./wszl.exe
+#
+#  artifacts:
+#    name: wszl-windows
+#    paths:
+#      - wszl.exe
+#      - README.md
+#      - README.RU.md
+#      - wszl.yml-dist
+#      - urls.txt-example
+#    expire_in: 1 week
+#
+#  tags:
+#    - windows
