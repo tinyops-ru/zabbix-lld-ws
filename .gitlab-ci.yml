@@ -46,7 +46,8 @@ build-rhel8:
       - wszl
       - README.md
       - README.RU.md
-      - wszl.yml-example
+      - wszl.yml-dist
+      - urls.txt-example
     expire_in: 1 week
 
   tags:
@@ -72,7 +73,7 @@ build-rhel7:
       - wszl
       - README.md
       - README.RU.md
-      - wszl.yml-example
+      - urls.txt-example
     expire_in: 1 week
 
   tags:
@@ -95,7 +96,8 @@ build-windows:
       - wszl.exe
       - README.md
       - README.RU.md
-      - wszl.yml-example
+      - wszl.yml-dist
+      - urls.txt-example
     expire_in: 1 week
 
   tags:
