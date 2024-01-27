@@ -15,7 +15,7 @@ build-debian:
     - upx -9 --lzma wszl
 
   artifacts:
-    name: wszl-rockylinux8
+    name: wszl-debian
     paths:
       - wszl
       - README.md
