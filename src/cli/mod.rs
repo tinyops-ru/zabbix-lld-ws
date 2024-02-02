@@ -68,7 +68,7 @@ pub fn get_cli_app() -> ArgMatches<'static> {
             )
             .arg(
                 Arg::with_name(FILE_ARG)
-                    .long(SOURCE_ARG)
+                    .long(FILE_ARG)
                     .short(FILE_SHORT_ARG)
                     .requires(SOURCE_ARG)
                     .help("urls file name. Expected file format (per row): zabbix-host|url")
