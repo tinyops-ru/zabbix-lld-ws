@@ -75,7 +75,7 @@ pub fn generate_web_scenarios_and_triggers(zabbix_client: &impl ZabbixApiClient,
                     info!("item with key '{item_key}' already exists, skip")
                 }
 
-                let template_vars = get_template_vars(&host.host_id, &url_source.url);
+                let template_vars = get_template_vars(&host.host, &url_source.url);
 
                 // TODO: make configurable
                 let scenario_name = format!("Check index page '{}'", &url_source.url);
