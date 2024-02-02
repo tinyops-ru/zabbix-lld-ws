@@ -133,6 +133,8 @@ pub fn process_cli_commands(matches: &ArgMatches) {
                         matches.value_of(FILE_ARG).unwrap()
                     } else { FILE_ARG_DEFAULT_VALUE };
 
+                    info!("collecting urls from source '{url_source_type}'..");
+
                     if url_source_type == SOURCE_ARG_DEFAULT_VALUE {
                         let url_provider = ZabbixUrlSourceProvider::new(
                             &config.zabbix, zabbix_client.clone(), item_key_search_mask
@@ -163,7 +165,11 @@ pub fn process_cli_commands(matches: &ArgMatches) {
                     }
 
                 }
-                Err(e) => error!("config load error: {}", e)
+                Err(e) => {
+                    error!("config load error: {}", e);
+                    error!("{}", e.root_cause());
+                    exit(ERROR_EXIT_CODE);
+                }
             }
         }
         None => {}
