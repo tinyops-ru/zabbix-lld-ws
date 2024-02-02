@@ -1,6 +1,5 @@
 zabbix:
   api:
-    version: 6
     endpoint: http://localhost:3080/api_jsonrpc.php
     username: Admin
     password: zabbix
