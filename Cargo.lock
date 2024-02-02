@@ -1933,7 +1933,7 @@ dependencies = [
 [[package]]
 name = "zabbix-api"
 version = "0.2.1"
-source = "git+https://github.com/lebe-dev/zabbix-api-rs.git#3b0e89c1303e3bc637e150a6ca08f17d2c178432"
+source = "git+https://github.com/lebe-dev/zabbix-api-rs.git#44ba9914e7d0a5929648f59faf29c13ab87068d3"
 dependencies = [
  "log",
  "reqwest",
