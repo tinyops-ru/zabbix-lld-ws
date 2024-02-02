@@ -1,7 +1,11 @@
 # WSZL
 
-Adds Web Scenarios support for 
-[Zabbix Low Level Discovery](https://www.zabbix.com/documentation/current/manual/discovery/low_level_discovery) feature.
+Add Web Scenarios support to [Zabbix Low Level Discovery](https://www.zabbix.com/documentation/current/manual/discovery/low_level_discovery).
+
+## Why?
+
+Zabbix team provides very fragile http-item implementation and don't want to support 
+for Web-scenarios in Low Level Discovery feature. So, I've implemented this tool to fix that.
 
 ## Installation
 
