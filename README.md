@@ -15,9 +15,19 @@ See [INSTALL.md](INSTALL.md).
 
 #### Generate items and triggers
 
+```shell
+wszl --log-level=info -d /etc/zabbix gen
 ```
-$ wszl --log-level=info -d /etc/zabbix gen
+
+#### Use file as a source for urls
+
+By default wszl gets urls from Zabbix, but you can provide urls from file.
+
+```shell
+wszl --log-level=info -d /etc/zabbix gen --source=file --file=urls.txt
 ```
+
+Check `urls.txt-example` as example.
 
 #### Configuration
 

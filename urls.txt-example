@@ -1,3 +1,10 @@
+#---------------------------------------------------------------
+# FORMAT:
+# HOST|URL
+#
+# All hosts present in file should exist in Zabbix
+#---------------------------------------------------------------
+
 websrv10-182|https://demo.company.com
 
 # comment
