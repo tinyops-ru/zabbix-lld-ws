@@ -4,7 +4,6 @@ use std::path::Path;
 use anyhow::Context;
 use config::Config;
 use serde::Deserialize;
-use serde_repr::Deserialize_repr;
 
 use crate::types::OperationResult;
 
@@ -46,7 +45,6 @@ pub struct ZabbixTriggerConfig {
 #[derive(PartialEq, Deserialize, Clone, Debug)]
 #[serde(rename_all = "kebab-case")]
 pub struct ZabbixApiConfig {
-    pub version: ZabbixApiVersion,
     pub endpoint: String,
     pub username: String,
     pub password: String
@@ -54,26 +52,7 @@ pub struct ZabbixApiConfig {
 
 impl Display for ZabbixApiConfig {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f, "{}, endpoint: '{}', username: '{}', password: '*********'",
-            self.version, self.endpoint, self.username
-        )
-    }
-}
-
-#[derive(PartialEq, Deserialize_repr, Clone, Debug)]
-#[repr(u8)]
-pub enum ZabbixApiVersion {
-    V6 = 6,
-    V5 = 5
-}
-
-impl Display for ZabbixApiVersion {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ZabbixApiVersion::V6 => write!(f, "api version: 6"),
-            ZabbixApiVersion::V5 => write!(f, "api version: 5")
-        }
+        write!(f, "endpoint '{}', username '{}', password '***********'", self.endpoint, self.username)
     }
 }
 
@@ -119,7 +98,7 @@ pub fn load_config_from_file(file_path: &Path) -> OperationResult<AppConfig> {
 mod tests {
     use std::path::Path;
 
-    use crate::config::{AppConfig, load_config_from_file, WebScenarioConfig, ZabbixApiConfig, ZabbixApiVersion, ZabbixConfig, ZabbixTriggerConfig};
+    use crate::config::{AppConfig, load_config_from_file, WebScenarioConfig, ZabbixApiConfig, ZabbixConfig, ZabbixTriggerConfig};
 
     #[test]
     fn complete_config_should_be_loaded_from_file() {
@@ -130,7 +109,6 @@ mod tests {
                 let expected_config = AppConfig {
                     zabbix: ZabbixConfig {
                         api: ZabbixApiConfig {
-                            version: ZabbixApiVersion::V6,
                             endpoint: "http://zabbix/api_jsonrpc.php".to_string(),
                             username: "abcd".to_string(),
                             password: "0329jg02934jg34g".to_string(),
