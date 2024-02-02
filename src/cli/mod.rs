@@ -145,7 +145,11 @@ pub fn process_cli_commands(matches: &ArgMatches) {
                             &config.zabbix.scenario, &config.zabbix.trigger
                         ) {
                             Ok(_) => exit(OK_EXIT_CODE),
-                            Err(_) => exit(ERROR_EXIT_CODE)
+                            Err(e) => {
+                                error!("generation error: {}", e);
+                                error!("{}", e.root_cause());
+                                exit(ERROR_EXIT_CODE)
+                            }
                         }
 
                     } else if url_source_type == SOURCE_ARG_FILE_VALUE {
@@ -156,7 +160,11 @@ pub fn process_cli_commands(matches: &ArgMatches) {
                             &config.zabbix.scenario, &config.zabbix.trigger
                         ) {
                             Ok(_) => exit(OK_EXIT_CODE),
-                            Err(_) => exit(ERROR_EXIT_CODE)
+                            Err(e) => {
+                                error!("generation error: {}", e);
+                                error!("{}", e.root_cause());
+                                exit(ERROR_EXIT_CODE)
+                            }
                         }
 
                     } else {
