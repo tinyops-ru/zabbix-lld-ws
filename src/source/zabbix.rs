@@ -27,7 +27,7 @@ impl <T: ZabbixApiClient> ZabbixUrlSourceProvider<T> {
 
 impl <T: ZabbixApiClient> UrlSourceProvider for ZabbixUrlSourceProvider<T> {
     fn get_url_sources(&self) -> OperationResult<Vec<UrlSource>> {
-        info!("getting url sources from zabbix server..");
+        info!("getting url sources from zabbix server '{}'..", &self.zabbix_config.api.endpoint);
 
         let auth_token = &self.zabbix_client.get_auth_session(
             &self.zabbix_config.api.username, &self.zabbix_config.api.password).context("zabbix auth error")?;
@@ -50,11 +50,15 @@ impl <T: ZabbixApiClient> UrlSourceProvider for ZabbixUrlSourceProvider<T> {
         }
 
         let params = Params {
-            hostids: host_ids,
+            hostids: host_ids.clone(),
         };
+
+        debug!("search hosts by ids: {:?}", host_ids);
 
         let hosts = &self.zabbix_client.get_hosts(&auth_token, &params)
             .context("unable to find hosts")?;
+
+        debug!("hosts received: {:?}", hosts);
 
         let mut results: Vec<UrlSource> = vec![];
 
