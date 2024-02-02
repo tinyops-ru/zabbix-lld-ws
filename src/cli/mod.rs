@@ -110,7 +110,7 @@ pub fn process_cli_commands(matches: &ArgMatches) {
     let mut matched_command = false;
 
     match matches.subcommand_matches(GENERATE_COMMAND) {
-        Some(_) => {
+        Some(gen_command) => {
             matched_command = true;
             let config_file_path = Path::new("wszl.yml");
 
@@ -121,16 +121,16 @@ pub fn process_cli_commands(matches: &ArgMatches) {
                     let zabbix_client = ZabbixApiV6Client::new(
                         http_client, &config.zabbix.api.endpoint);
 
-                    let item_key_search_mask: &str = if matches.is_present(ITEM_KEY_SEARCH_MASK_ARG) {
-                        matches.value_of(ITEM_KEY_SEARCH_MASK_ARG).unwrap()
+                    let item_key_search_mask: &str = if gen_command.is_present(ITEM_KEY_SEARCH_MASK_ARG) {
+                        gen_command.value_of(ITEM_KEY_SEARCH_MASK_ARG).unwrap()
                     } else { ITEM_KEY_SEARCH_MASK_DEFAULT_VALUE };
 
-                    let url_source_type: &str = if matches.is_present(SOURCE_ARG) {
-                        matches.value_of(SOURCE_ARG).unwrap()
+                    let url_source_type: &str = if gen_command.is_present(SOURCE_ARG) {
+                        gen_command.value_of(SOURCE_ARG).unwrap()
                     } else { SOURCE_ARG_DEFAULT_VALUE };
 
-                    let filename: &str = if matches.is_present(FILE_ARG) {
-                        matches.value_of(FILE_ARG).unwrap()
+                    let filename: &str = if gen_command.is_present(FILE_ARG) {
+                        gen_command.value_of(FILE_ARG).unwrap()
                     } else { FILE_ARG_DEFAULT_VALUE };
 
                     info!("collecting urls from source '{url_source_type}'..");
