@@ -2,13 +2,12 @@ use serde_derive::Serialize;
 use zabbix_api::client::ZabbixApiClient;
 use zabbix_api::host::get::GetHostsRequest;
 use zabbix_api::item::create::CreateItemRequest;
-use zabbix_api::item::get::GetItemsRequest;
+use zabbix_api::item::get::GetItemsRequestByKey;
 use zabbix_api::trigger::create::CreateTriggerRequest;
 use zabbix_api::trigger::get::GetTriggerByDescriptionRequest;
 use zabbix_api::webscenario::create::CreateWebScenarioRequest;
 use zabbix_api::webscenario::get::GetWebScenarioByNameRequest;
 use zabbix_api::webscenario::ZabbixWebScenarioStep;
-use zabbix_api::ZABBIX_EXTEND_PROPERTY_VALUE;
 
 use crate::config::{WebScenarioConfig, ZabbixTriggerConfig};
 use crate::source::UrlSourceProvider;
@@ -21,6 +20,8 @@ pub fn generate_web_scenarios_and_triggers(zabbix_client: &impl ZabbixApiClient,
                                trigger_config: &ZabbixTriggerConfig) -> EmptyResult {
 
     let url_sources = url_source_provider.get_url_sources()?;
+
+    debug!("url sources: {:?}", url_sources);
 
     let session = zabbix_client.get_auth_session(&zabbix_login, &zabbix_password)?;
 
@@ -36,6 +37,8 @@ pub fn generate_web_scenarios_and_triggers(zabbix_client: &impl ZabbixApiClient,
             },
         };
 
+        debug!("looking for host '{}'..", url_source.zabbix_host);
+
         let hosts_found = zabbix_client.get_hosts(&session, &request)?;
 
         match hosts_found.first() {
@@ -49,15 +52,7 @@ pub fn generate_web_scenarios_and_triggers(zabbix_client: &impl ZabbixApiClient,
                     pub key_: String
                 }
 
-                let request = GetItemsRequest {
-                    output: ZABBIX_EXTEND_PROPERTY_VALUE.to_string(),
-                    with_triggers: false,
-                    host_ids: host.host_id.to_string(),
-                    search: ItemSearch {
-                        key_: item_key.to_string(),
-                    },
-                    sort_field: "name".to_string(),
-                };
+                let request = GetItemsRequestByKey::new(&item_key);
 
                 let items_found = zabbix_client.get_items(&session, &request)?;
 

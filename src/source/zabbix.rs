@@ -1,10 +1,8 @@
-use std::collections::HashMap;
-
 use anyhow::Context;
 use regex::Regex;
 use serde_derive::Serialize;
 use zabbix_api::client::ZabbixApiClient;
-use zabbix_api::item::get::GetItemsRequest;
+use zabbix_api::item::get::GetItemsRequestByKey;
 
 use crate::config::ZabbixConfig;
 use crate::source::{UrlSource, UrlSourceProvider};
@@ -34,18 +32,14 @@ impl <T: ZabbixApiClient> UrlSourceProvider for ZabbixUrlSourceProvider<T> {
         let auth_token = &self.zabbix_client.get_auth_session(
             &self.zabbix_config.api.username, &self.zabbix_config.api.password).context("zabbix auth error")?;
 
-        let search: HashMap<String,String> = HashMap::from([("key_".to_string(), self.item_key_search_mask.to_string())]);
+        let request = GetItemsRequestByKey::new(&self.item_key_search_mask);
 
-        let params = GetItemsRequest {
-            output: "extend".to_string(),
-            with_triggers: false,
-            host_ids: "".to_string(),
-            search,
-            sort_field: "name".to_string(),
-        };
+        debug!("request: {:?}", request);
 
         let items = &self.zabbix_client.get_items(
-            &auth_token, &params).context("unable to find zabbix items")?;
+            &auth_token, &request).context("unable to find zabbix items")?;
+
+        debug!("items received: {:?}", items);
 
         let host_ids: Vec<String> = items.iter()
             .map(|item| item.host_id.to_string()).collect();
