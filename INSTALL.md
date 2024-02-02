@@ -20,11 +20,11 @@
     ```
 
 5. Add cron task (i.e. `/var/spool/cron/zabbix`):
-    ```
+    ```cronexp
     */30 * * * * /etc/zabbix/wszl --log-level=info -d /etc/zabbix gen
     ```   
    Every 30 minutes tool will generate required items.
 
 ## Related
 
-[Configuration example](EXAMPLE.md)
+- [Configuration example](EXAMPLE.md)

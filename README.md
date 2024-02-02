@@ -1,7 +1,5 @@
 # WSZL
 
-[Русская версия](README.RU.md)
-
 Adds Web Scenarios support for 
 [Zabbix Low Level Discovery](https://www.zabbix.com/documentation/current/manual/discovery/low_level_discovery) feature.
 
@@ -39,7 +37,7 @@ File `wszl.yml`.
 
 ## How it works
 
-1. WSZL gets items from Zabbix API by mask
+1. WSZL gets items from Zabbix API by mask or file
 2. Creates web scenarios and triggers
     - Web scenario params: title - "Check index page 'XYZ'", expected response code - 200
     - Trigger params: severity - High (4), title - 'Site XYZ is unavailable', expression `web.test.fail`  
