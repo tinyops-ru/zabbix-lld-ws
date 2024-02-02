@@ -3,37 +3,27 @@
 Adds Web Scenarios support for 
 [Zabbix Low Level Discovery](https://www.zabbix.com/documentation/current/manual/discovery/low_level_discovery) feature.
 
-## Getting started
-
-### Installation
+## Installation
 
 See [INSTALL.md](INSTALL.md).
 
-### Usage
+## Usage
 
-#### Generate items and triggers
+### Generate items and triggers
+
+Based on data from Zabbix:
 
 ```shell
-wszl --log-level=info -d /etc/zabbix gen
+wszl -d /etc/zabbix gen
 ```
 
-#### Use file as a source for urls
-
-By default wszl gets urls from Zabbix, but you can provide urls from file.
+Or use file as a source for urls:
 
 ```shell
-wszl --log-level=info -d /etc/zabbix gen --source=file --file=urls.txt
+wszl -d /etc/zabbix gen --source=file --file=urls.txt
 ```
 
 Check `urls.txt-example` as example.
-
-#### Configuration
-
-File `wszl.yml`.
-
-**Options:**
-
-- `--item-key-starts-with` - specify item search mask
 
 ## How it works
 

@@ -5,16 +5,16 @@
 2. Copy `wszl` to `/etc/zabbix` on Zabbix server
 
 3. Set permissions:
-    ```bash
+    ```shell
     chmod +x /etc/zabbix/wszl
     ```
 4. Create config file `/etc/zabbix/wszl.yml`:
-    ```bash
+    ```shell
     cp wszl.yml-dist /etc/zabbix/wszl.yml
     ```
 
    Update permissions:
-    ```shell script
+    ```shell
     chmod 750 /etc/zabbix/wszl.yml
     chown zabbix: /etc/zabbix
     ```
