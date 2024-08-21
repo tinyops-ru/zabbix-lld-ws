@@ -17,7 +17,7 @@ clap = "4.5.16"
 
 config = { version = "0.14.0", features = ["yaml"] }
 
-reqwest = { version = "0.11.27", features = ["blocking", "json"] }
+reqwest = { version = "0.12.7", features = ["blocking", "json"] }
 
 openssl = { version = "0.10.66", features = ["vendored"] }
 
@@ -26,7 +26,7 @@ serde_derive = "1.0.208"
 serde_repr = "0.1.19"
 serde_json = "1.0.125"
 
-zabbix-api = { git = "https://github.com/lebe-dev/zabbix-api-rs.git" }
+zabbix-api = "0.2.2"
 
 regex = "1.10.6"
 
