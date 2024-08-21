@@ -36,7 +36,7 @@ pub const ERROR_EXIT_CODE: i32 = 1;
 
 pub fn get_cli_app() -> ArgMatches<'static> {
     let matches = App::new("WSZL tool")
-        .version("0.8.0")
+        .version("1.0.0")
         .author("Eugene Lebedev <duke.tougu@gmail.com>")
         .about("Add Web scenarios support for Zabbix Low Level Discovery")
         .arg(
