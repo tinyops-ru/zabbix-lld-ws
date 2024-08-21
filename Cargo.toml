@@ -2,7 +2,7 @@
 name = "zabbix-lld-ws"
 version = "0.8.0"
 authors = ["Eugene Lebedev <duke.tougu@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 [profile.release]
 opt-level = 'z'
