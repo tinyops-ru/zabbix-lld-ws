@@ -1,21 +1,18 @@
 stages:
   - build
 
-build-debian:
+build-bullseye:
   stage: build
 
   only:
     - main
 
   script:
-    - RUSTFLAGS='-C target-feature=+crt-static' cargo build --release --target x86_64-unknown-linux-gnu
-    - cp target/x86_64-unknown-linux-gnu/release/zabbix-lld-ws wszl
-    - eu-elfcompress wszl
-    - strip wszl
-    - upx -9 --lzma wszl
+    - DOCKER_BUILDKIT=1 docker build --progress=plain -o out .
+    - cp out/wszl wszl
 
   artifacts:
-    name: wszl-debian
+    name: wszl-bullseye
     paths:
       - wszl
       - README.md
@@ -25,61 +22,7 @@ build-debian:
     expire_in: 1 week
 
   tags:
-    - tinybull
-
-build-rhel8:
-  stage: build
-
-  only:
-    - main
-
-  script:
-    - cross test
-    - cross build --release
-    - cp target/x86_64-unknown-linux-gnu/release/zabbix-lld-ws wszl
-    - eu-elfcompress wszl
-    - strip wszl
-    - upx -9 --lzma wszl
-
-  artifacts:
-    name: wszl-rockylinux8
-    paths:
-      - wszl
-      - README.md
-      - README.RU.md
-      - wszl.yml-dist
-      - urls.txt-example
-    expire_in: 1 week
-
-  tags:
-    - rockylinux8
-
-build-rhel7:
-  stage: build
-
-  only:
-    - main
-
-  script:
-    - cross test
-    - cross build --release
-    - cp target/x86_64-unknown-linux-gnu/release/zabbix-lld-ws wszl
-    - eu-elfcompress wszl
-    - strip wszl
-    - upx -9 --lzma wszl
-
-  artifacts:
-    name: wszl-rhel7
-    paths:
-      - wszl
-      - README.md
-      - README.RU.md
-      - wszl.yml-dist
-      - urls.txt-example
-    expire_in: 1 week
-
-  tags:
-    - rhel7
+    - linux
 
 #build-windows:
 #  stage: build
