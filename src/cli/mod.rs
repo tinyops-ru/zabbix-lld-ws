@@ -1,16 +1,14 @@
-use std::env;
-use std::path::Path;
-use std::process::exit;
-
-use clap::{App, Arg, ArgMatches, SubCommand};
-use reqwest::blocking::Client;
-use zabbix_api::client::v6::ZabbixApiV6Client;
-
 use crate::command::generate::items::generate_web_scenarios_and_triggers;
 use crate::config::load_config_from_file;
 use crate::logging::get_logging_config;
 use crate::source::file::FileUrlSourceProvider;
 use crate::source::zabbix::ZabbixUrlSourceProvider;
+use clap::{Arg, ArgAction, ArgMatches, Command};
+use reqwest::blocking::Client;
+use std::env;
+use std::path::Path;
+use std::process::exit;
+use zabbix_api::client::v6::ZabbixApiV6Client;
 
 pub const GENERATE_COMMAND: &str = "gen";
 
@@ -27,6 +25,7 @@ pub const ITEM_KEY_SEARCH_MASK_DEFAULT_VALUE: &str = "vhost.item";
 
 pub const WORK_DIR_ARG: &str = "work-dir";
 pub const WORK_DIR_SHORT_ARG: &str = "d";
+pub const WORK_DIR_DEFAULT_VALUE: &str = ".";
 
 pub const LOG_LEVEL_ARG: &str = "log-level";
 pub const LOG_LEVEL_DEFAULT_VALUE: &str = "info";
@@ -34,83 +33,87 @@ pub const LOG_LEVEL_DEFAULT_VALUE: &str = "info";
 pub const OK_EXIT_CODE: i32 = 0;
 pub const ERROR_EXIT_CODE: i32 = 1;
 
-pub fn get_cli_app() -> ArgMatches<'static> {
-    let matches = App::new("WSZL tool")
+pub fn get_cli_app() -> ArgMatches {
+    let matches = Command::new("WSZL tool")
         .version("1.0.0")
         .author("Eugene Lebedev <duke.tougu@gmail.com>")
         .about("Add Web scenarios support for Zabbix Low Level Discovery")
+        .arg_required_else_help(true)
         .arg(
-            Arg::with_name(WORK_DIR_ARG)
+            Arg::new(WORK_DIR_ARG)
                 .long(WORK_DIR_ARG)
-                .short(WORK_DIR_SHORT_ARG)
+                .short('d')
                 .help("set working directory")
-                .takes_value(true)
+                .required(false)
+                .default_value(WORK_DIR_DEFAULT_VALUE)
         )
         .arg(
-            Arg::with_name(LOG_LEVEL_ARG)
+            Arg::new(LOG_LEVEL_ARG)
                 .long(LOG_LEVEL_ARG)
                 .help("set logging level. possible values: debug, info, error, warn, trace")
-                .case_insensitive(true)
-                .takes_value(true).required(false)
+                .ignore_case(true)
+                .required(false)
                 .default_value(LOG_LEVEL_DEFAULT_VALUE)
         )
-        .subcommand(SubCommand::with_name(GENERATE_COMMAND)
+        .subcommand(Command::new(GENERATE_COMMAND)
             .about("generate web scenarios and triggers for zabbix items")
             .arg(
-                Arg::with_name(SOURCE_ARG)
+                Arg::new(SOURCE_ARG)
                     .long(SOURCE_ARG)
-                    .short(SOURCE_SHORT_ARG)
+                    .short('s')
                     .help("set urls source: zabbix, text-file")
                     .default_value(SOURCE_ARG_DEFAULT_VALUE)
-                    .possible_values(&[SOURCE_ARG_DEFAULT_VALUE, SOURCE_ARG_FILE_VALUE])
-                    .takes_value(true)
                     .required(false)
             )
             .arg(
-                Arg::with_name(FILE_ARG)
+                Arg::new(FILE_ARG)
                     .long(FILE_ARG)
-                    .short(FILE_SHORT_ARG)
+                    .short('f')
                     .requires(SOURCE_ARG)
                     .help("urls file name. Expected file format (per row): zabbix-host|url")
                     .default_value(FILE_ARG_DEFAULT_VALUE)
-                    .takes_value(true)
                     .required(false)
             )
             .arg(
-                Arg::with_name(ITEM_KEY_SEARCH_MASK_ARG)
+                Arg::new(ITEM_KEY_SEARCH_MASK_ARG)
                     .long(ITEM_KEY_SEARCH_MASK_ARG)
-                    .short(ITEM_KEY_SEARCH_MASK_ARG)
                     .help("set search mask for items")
                     .default_value(ITEM_KEY_SEARCH_MASK_DEFAULT_VALUE)
-                    .takes_value(true)
                     .required(false)
             )
         )
         .get_matches();
 
-    let working_directory: &Path = if matches.is_present(WORK_DIR_ARG) {
-        let work_dir_value = matches.value_of(WORK_DIR_ARG).unwrap();
-        Path::new(work_dir_value)
-
-    } else { Path::new("/etc/zabbix") };
-
-    env::set_current_dir(working_directory).expect("unable to set working directory");
-
-    let logging_level: &str = if matches.is_present(LOG_LEVEL_ARG) {
-        matches.value_of(LOG_LEVEL_ARG).unwrap()
-    } else { LOG_LEVEL_DEFAULT_VALUE };
-
-    let logging_config = get_logging_config(logging_level);
-    log4rs::init_config(logging_config).unwrap();
+    init_working_dir(&matches);
+    init_logging(&matches);
 
     matches
+}
+
+pub fn init_working_dir(matches: &ArgMatches) {
+    let working_directory: &Path = get_argument_path_value(
+        &matches, WORK_DIR_ARG, WORK_DIR_DEFAULT_VALUE);
+
+    debug!("working directory '{}'", &working_directory.display());
+
+    env::set_current_dir(&working_directory).expect("couldn't set working directory");
+}
+
+fn init_logging(matches: &ArgMatches) {
+    let log_level = match matches.get_one::<String>(LOG_LEVEL_ARG) {
+        Some(value) => {value}
+        None => LOG_LEVEL_DEFAULT_VALUE
+    };
+
+    let logging_config = get_logging_config(log_level);
+    log4rs::init_config(logging_config).expect("logging init error");
 }
 
 pub fn process_cli_commands(matches: &ArgMatches) {
     let mut matched_command = false;
 
-    match matches.subcommand_matches(GENERATE_COMMAND) {
-        Some(gen_command) => {
+    match matches.subcommand() {
+        Some(("asdasd", matches)) => {
             matched_command = true;
             let config_file_path = Path::new("wszl.yml");
 
@@ -121,17 +124,9 @@ pub fn process_cli_commands(matches: &ArgMatches) {
                     let zabbix_client = ZabbixApiV6Client::new(
                         http_client, &config.zabbix.api.endpoint);
 
-                    let item_key_search_mask: &str = if gen_command.is_present(ITEM_KEY_SEARCH_MASK_ARG) {
-                        gen_command.value_of(ITEM_KEY_SEARCH_MASK_ARG).unwrap()
-                    } else { ITEM_KEY_SEARCH_MASK_DEFAULT_VALUE };
-
-                    let url_source_type: &str = if gen_command.is_present(SOURCE_ARG) {
-                        gen_command.value_of(SOURCE_ARG).unwrap()
-                    } else { SOURCE_ARG_DEFAULT_VALUE };
-
-                    let filename: &str = if gen_command.is_present(FILE_ARG) {
-                        gen_command.value_of(FILE_ARG).unwrap()
-                    } else { FILE_ARG_DEFAULT_VALUE };
+                    let item_key_search_mask = matches.get_one::<String>(ITEM_KEY_SEARCH_MASK_ARG).unwrap();
+                    let url_source_type = matches.get_one::<String>(SOURCE_ARG).unwrap();
+                    let filename = matches.get_one::<String>(FILE_ARG).unwrap();
 
                     info!("collecting urls from source '{url_source_type}'..");
 
@@ -180,10 +175,18 @@ pub fn process_cli_commands(matches: &ArgMatches) {
                 }
             }
         }
+        _ => println!("use -h to get help")
+    }
+}
+
+fn get_argument_path_value<'a>(matches: &'a ArgMatches, long_argument: &str,
+                               default_path: &'a str) -> &'a Path {
+    let mut path: &Path = Path::new(default_path);
+
+    match matches.get_one::<String>(long_argument) {
+        Some(value) => path = Path::new(value),
         None => {}
     }
 
-    if !matched_command {
-        matches.usage();
-    }
+    return path;
 }
