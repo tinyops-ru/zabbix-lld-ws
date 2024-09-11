@@ -1,9 +1,9 @@
 use crate::command::generate::items::generate_web_scenarios_and_triggers;
-use crate::config::load_config_from_file;
+use crate::config::file::load_config_from_file;
 use crate::logging::get_logging_config;
 use crate::source::file::FileUrlSourceProvider;
 use crate::source::zabbix::ZabbixUrlSourceProvider;
-use clap::{Arg, ArgAction, ArgMatches, Command};
+use clap::{Arg, ArgMatches, Command};
 use reqwest::blocking::Client;
 use std::env;
 use std::path::Path;
@@ -110,11 +110,8 @@ fn init_logging(matches: &ArgMatches) {
 }
 
 pub fn process_cli_commands(matches: &ArgMatches) {
-    let mut matched_command = false;
-
     match matches.subcommand() {
         Some(("asdasd", matches)) => {
-            matched_command = true;
             let config_file_path = Path::new("wszl.yml");
 
             match load_config_from_file(config_file_path) {
@@ -137,7 +134,7 @@ pub fn process_cli_commands(matches: &ArgMatches) {
 
                         match generate_web_scenarios_and_triggers(
                             &zabbix_client, &config.zabbix.api.username, &config.zabbix.api.password, url_provider,
-                            &config.zabbix.scenario, &config.zabbix.trigger
+                            &config.zabbix.scenario, &config.zabbix.item, &config.zabbix.trigger
                         ) {
                             Ok(_) => exit(OK_EXIT_CODE),
                             Err(e) => {
@@ -152,7 +149,7 @@ pub fn process_cli_commands(matches: &ArgMatches) {
 
                         match generate_web_scenarios_and_triggers(
                             &zabbix_client, &config.zabbix.api.username, &config.zabbix.api.password, url_provider,
-                            &config.zabbix.scenario, &config.zabbix.trigger
+                            &config.zabbix.scenario, &config.zabbix.item, &config.zabbix.trigger
                         ) {
                             Ok(_) => exit(OK_EXIT_CODE),
                             Err(e) => {

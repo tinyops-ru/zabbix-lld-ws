@@ -9,15 +9,18 @@ use zabbix_api::webscenario::create::CreateWebScenarioRequest;
 use zabbix_api::webscenario::get::GetWebScenarioByNameRequest;
 use zabbix_api::webscenario::ZabbixWebScenarioStep;
 
-use crate::config::{WebScenarioConfig, ZabbixTriggerConfig};
+use crate::config::item::ZabbixItemConfig;
+use crate::config::trigger::ZabbixTriggerConfig;
+use crate::config::ws::WebScenarioConfig;
 use crate::source::UrlSourceProvider;
 use crate::template::{get_template_vars, process_template_string};
 use crate::types::EmptyResult;
 
-pub fn generate_web_scenarios_and_triggers(zabbix_client: &impl ZabbixApiClient, zabbix_login: &str, zabbix_password: &str,
-                               url_source_provider: impl UrlSourceProvider,
-                               web_scenario_config: &WebScenarioConfig,
-                               trigger_config: &ZabbixTriggerConfig) -> EmptyResult {
+pub fn generate_web_scenarios_and_triggers(
+    zabbix_client: &impl ZabbixApiClient, zabbix_login: &str, zabbix_password: &str,
+    url_source_provider: impl UrlSourceProvider, target_hostname: &str,
+    web_scenario_config: &WebScenarioConfig,
+    item_config: &ZabbixItemConfig, trigger_config: &ZabbixTriggerConfig) -> EmptyResult {
 
     let url_sources = url_source_provider.get_url_sources()?;
 
@@ -31,21 +34,31 @@ pub fn generate_web_scenarios_and_triggers(zabbix_client: &impl ZabbixApiClient,
     }
 
     for url_source in url_sources {
+
+        let zabbix_host: String;
+
+        if target_hostname.is_empty() {
+            url_source.zabbix_host.to_string()
+
+        } else {
+            target_hostname.to_string()
+        }
+
         let request = GetHostsRequest {
             filter: HostFilter {
-                host: vec![url_source.zabbix_host.to_string()],
+                host: vec![zabbix_host],
             },
         };
 
-        debug!("looking for host '{}'..", url_source.zabbix_host);
+        debug!("looking for host '{zabbix_host}'..");
 
         let hosts_found = zabbix_client.get_hosts(&session, &request)?;
 
         match hosts_found.first() {
             Some(host) => {
-                info!("zabbix host '{}' has been found", &url_source.zabbix_host);
+                info!("zabbix host '{zabbix_host}' has been found");
 
-                let item_key = format!("vhost.item[{}]", &url_source.url);
+                let item_key = item_config.key_template.replace("{}", &url_source.url);
 
                 #[derive(Serialize)]
                 struct ItemSearch {
@@ -57,16 +70,17 @@ pub fn generate_web_scenarios_and_triggers(zabbix_client: &impl ZabbixApiClient,
                 let items_found = zabbix_client.get_items(&session, &request)?;
 
                 if items_found.is_empty() {
-                    // TODO: make configurable via wszl.yml
+                    let name = item_config.name_template.replace("{}", &url_source.url);
+
                     let request = CreateItemRequest {
-                        name: format!("Vhost '{}' item", url_source.url),
+                        name,
                         key_: item_key,
                         host_id: host.host_id.to_string(),
-                        r#type: 7,
-                        value_type: 0,
-                        interface_id: "0".to_string(),
-                        tags: vec![],
-                        delay: "5m".to_string(),
+                        r#type: item_config.r#type,
+                        value_type: item_config.value_type,
+                        interface_id: item_config.interface_id.to_string(),
+                        tags: item_config.tags.clone(),
+                        delay: item_config.delay.to_string(),
                     };
 
                     zabbix_client.create_item(&session, &request)?;
@@ -86,7 +100,7 @@ pub fn generate_web_scenarios_and_triggers(zabbix_client: &impl ZabbixApiClient,
 
                 if web_scenarios.is_empty() {
                     let step = ZabbixWebScenarioStep {
-                        name: process_template_string(&web_scenario_config.name, &template_vars),
+                        name: process_template_string(&web_scenario_config.name_template, &template_vars),
                         url: url_source.url.to_string(),
                         status_codes: web_scenario_config.expect_status_code.to_string(),
                         no: "1".to_string(),

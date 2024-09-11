@@ -1,8 +1,11 @@
 zabbix:
+  target-hostname: 'test'
+
   api:
-    endpoint: https://zabbix.company.com/api_jsonrpc.php
-    username: CHANGE-ME
-    password: CHANGE-ME
+    version: 6
+    endpoint: http://zabbix/api_jsonrpc.php
+    username: abcd
+    password: 0329jg02934jg34g
 
   item:
     name-template: "Vhost '{}' item"
@@ -20,25 +23,18 @@ zabbix:
     # 3 - numeric unsigned;
     # 4 - text.
     value-type: 0
-    #tags:
-    #  - tag: 'abc'
-    #    value: 'something'
+    tags:
+      - tag: 'abc'
+        value: 'something'
 
   trigger:
     name: "Site '${URL}' is unavailable"
-
-    # Template variables are supported: ${HOST}, ${URL}
-    value: "${HOST}:web.test.fail[Check index page '${URL}'].last()"
+    value: "last(/${HOST}/web.test.fail[Check index page '${URL}'])<>0"
 
   scenario:
-    # Search existing elements
-    key-starts-with: "Check index page '"
-
-    # Template variables are supported: ${HOST}, ${URL}
+    key-starts-with: "blablabla"
     name-template: "Check index page '${URL}'"
     response-timeout: "15s"
     expect-status-code: "200"
     attempts: 3
     update-interval: "5m"
-
-

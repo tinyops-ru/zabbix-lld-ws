@@ -20,7 +20,6 @@ pub mod source;
 #[cfg(test)]
 pub mod tests;
 
-
 fn main() {
     let matches = get_cli_app();
     process_cli_commands(&matches);

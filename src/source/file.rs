@@ -69,7 +69,7 @@ mod tests {
     fn url_sources_should_be_returned() {
         init_logging();
 
-        let provider = FileUrlSourceProvider::new("tests/urls.txt");
+        let provider = FileUrlSourceProvider::new("test-data/urls.txt");
         match provider.get_url_sources() {
             Ok(results) => {
                 assert_eq!(2, results.len());
