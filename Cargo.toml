@@ -11,9 +11,9 @@ codegen-units = 1
 panic = 'abort'
 
 [dependencies]
-anyhow = "1.0.86"
+anyhow = "1.0.87"
 
-clap = "4.5.16"
+clap = "4.5.17"
 
 config = { version = "0.14.0", features = ["yaml"] }
 
@@ -21,12 +21,12 @@ reqwest = { version = "0.12.7", features = ["blocking", "json"] }
 
 openssl = { version = "0.10.66", features = ["vendored"] }
 
-serde = { version = "1.0.208", features = ["derive"] }
-serde_derive = "1.0.208"
+serde = { version = "1.0.210", features = ["derive"] }
+serde_derive = "1.0.210"
 serde_repr = "0.1.19"
-serde_json = "1.0.125"
+serde_json = "1.0.128"
 
-zabbix-api = "0.2.2"
+zabbix-api = "0.2.4"
 
 regex = "1.10.6"
 
