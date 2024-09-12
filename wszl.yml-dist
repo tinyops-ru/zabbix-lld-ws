@@ -7,8 +7,10 @@ zabbix:
     password: CHANGE-ME
 
   item:
+    # Template variables are supported: ${HOST}, ${URL}
     name-template: "Vhost '{}' item"
-    key-template: 'nginx.vhost.item[{}]'
+    # Template variables are supported: ${HOST}, ${URL}
+    key-template: 'nginx.vhost.item[${URL}]'
     interface-id: '0'
     delay: '5m'
     # Item type:

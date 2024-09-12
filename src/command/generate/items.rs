@@ -52,18 +52,18 @@ pub fn generate_web_scenarios_and_triggers(
 
         debug!("target host id '{host_id}'");
 
+        let template_vars = get_template_vars(&zabbix_host, &url_source.url);
+
         if !host_id.is_empty() {
-            let item_key = item_config.key_template.replace("{}", &url_source.url);
+            let item_key = process_template_string(&item_config.key_template, &template_vars);
 
             let request = GetItemsRequestByKey::new(&item_key);
 
             let items_found = zabbix_client.get_items(&session, &request)?;
 
             if items_found.is_empty() {
-                let name = item_config.name_template.replace("{}", &url_source.url);
-
                 let request = CreateItemRequest {
-                    name,
+                    name: process_template_string(&item_config.name_template, &template_vars),
                     key_: item_key,
                     host_id: host_id.to_string(),
                     r#type: item_config.r#type,
@@ -80,8 +80,6 @@ pub fn generate_web_scenarios_and_triggers(
             } else {
                 info!("item with key '{item_key}' already exists, skip")
             }
-
-            let template_vars = get_template_vars(&zabbix_host, &url_source.url);
 
             let scenario_name = process_template_string(
                 &web_scenario_config.name_template, &template_vars);
