@@ -59,4 +59,4 @@ curl --location --request GET 'https://zabbix.company.com/api_jsonrpc.php' \
 }'
 ```
 
-Response should contain items.
+Response must contain items.
