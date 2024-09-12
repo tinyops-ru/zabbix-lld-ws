@@ -7,10 +7,10 @@ zabbix:
     password: CHANGE-ME
 
   item:
-    # Template variables are supported: ${HOST}, ${URL}
+    # Template variables are supported: ${HOST}, ${URL}, ${URL_WITHOUT_PROTOCOL}
     name-template: "Vhost '{}' item"
-    # Template variables are supported: ${HOST}, ${URL}
-    key-template: 'nginx.vhost.item[${URL}]'
+    # Template variables are supported: ${HOST}, ${URL}, ${URL_WITHOUT_PROTOCOL}
+    key-template: 'nginx.vhost.item[${URL_WITHOUT_PROTOCOL}]'
     interface-id: '0'
     delay: '5m'
     # Item type:
@@ -29,14 +29,14 @@ zabbix:
     #    value: 'something'
 
   trigger:
-    name: "Site '${URL}' is unavailable"
+    name: "Site '${URL_WITHOUT_PROTOCOL}' is unavailable"
 
     priority: 4
 
     # Problem expression
-    # Template variables are supported: ${HOST}, ${URL}
-    problem-expression: "avg(/${HOST}/web.test.fail[${URL}],#3)>=1"
-    #problem-expression: "${HOST}:web.test.fail[Check index page '${URL}'].last()"
+    # Template variables are supported: ${HOST}, ${URL}, ${URL_WITHOUT_PROTOCOL}
+    problem-expression: "avg(/${HOST}/web.test.fail[${URL_WITHOUT_PROTOCOL}],#3)>=1"
+    #problem-expression: "${HOST}:web.test.fail[Check index page '${URL_WITHOUT_PROTOCOL}'].last()"
 
     # OK event generation mode.
     #
@@ -47,21 +47,21 @@ zabbix:
     recovery-mode: 0
 
     # Recovery expression
-    # Template variables are supported: ${HOST}, ${URL}
-    recovery-expression: "last(/${HOST}/web.test.fail[${URL}])=0"
+    # Template variables are supported: ${HOST}, ${URL}, ${URL_WITHOUT_PROTOCOL}
+    recovery-expression: "last(/${HOST}/web.test.fail[${URL_WITHOUT_PROTOCOL}])=0"
 
-    # Template variables are supported: ${HOST}, ${URL}
-    event-name: "${URL} is down"
+    # Template variables are supported: ${HOST}, ${URL}, ${URL_WITHOUT_PROTOCOL}
+    event-name: "${URL_WITHOUT_PROTOCOL} is down"
 
-    # Template variables are supported: ${HOST}, ${URL}
+    # Template variables are supported: ${HOST}, ${URL}, ${URL_WITHOUT_PROTOCOL}
     url: "${URL}"
 
   scenario:
     # Search existing elements
     key-starts-with: "Check index page '"
 
-    # Template variables are supported: ${HOST}, ${URL}
-    name-template: "Check index page '${URL}'"
+    # Template variables are supported: ${HOST}, ${URL}, ${URL_WITHOUT_PROTOCOL}
+    name-template: "Check index page '${URL_WITHOUT_PROTOCOL}'"
     response-timeout: "15s"
     expect-status-code: "200"
     attempts: 3

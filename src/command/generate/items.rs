@@ -43,16 +43,20 @@ pub fn generate_web_scenarios_and_triggers(
         let mut zabbix_host: String = url_source.zabbix_host.to_string();
 
         if target_hostname.is_empty() {
-            if let Some(id) = find_zabbix_host_id(zabbix_client, &session, &url_source.zabbix_host)? {
+            if let Some(id) = find_zabbix_host_id(
+                zabbix_client, &session, &url_source.zabbix_host
+            )? {
                 host_id = id;
             }
         } else {
             zabbix_host = target_hostname.to_string();
         }
 
+        debug!("target hostname '{zabbix_host}'");
         debug!("target host id '{host_id}'");
 
         let template_vars = get_template_vars(&zabbix_host, &url_source.url);
+        debug!("template vars: {:?}", template_vars);
 
         if !host_id.is_empty() {
             let item_key = process_template_string(&item_config.key_template, &template_vars);
@@ -117,19 +121,42 @@ pub fn generate_web_scenarios_and_triggers(
             if triggers.is_empty() {
                 info!("trigger '{trigger_description}' wasn't found, creating..");
 
+                let mut recovery_mode: Option<u8> = None;
+                let mut recovery_expression: Option<String> = None;
+
+                if !trigger_config.recovery_expression.is_empty() {
+                    recovery_mode = Some(trigger_config.recovery_mode);
+                    recovery_expression = Some(
+                        process_template_string(&trigger_config.recovery_expression, &template_vars)
+                    );
+                }
+
+                let mut url: Option<String> = None;
+
+                if !trigger_config.url.is_empty() {
+                    url = Some(process_template_string(&trigger_config.url, &template_vars));
+                }
+
+                let mut event_name: Option<String> = None;
+
+                if !trigger_config.event_name.is_empty() {
+                    event_name = Some(process_template_string(&trigger_config.event_name, &template_vars));
+                }
+
                 let request = CreateTriggerRequest {
                     description: trigger_description.to_string(),
                     expression: process_template_string(
                         &trigger_config.problem_expression, &template_vars),
                     priority: trigger_config.priority,
-                    recovery_mode: trigger_config.recovery_mode,
-                    recovery_expression: process_template_string(
-                        &trigger_config.recovery_expression, &template_vars),
-                    url: process_template_string(&trigger_config.url, &template_vars),
-                    event_name: process_template_string(&trigger_config.event_name, &template_vars),
+                    recovery_mode,
+                    recovery_expression,
+                    url,
+                    event_name,
                     dependencies: vec![],
                     tags: vec![],
                 };
+
+                debug!("create trigger request: {:?}", request);
 
                 zabbix_client.create_trigger(&session, &request)?;
 

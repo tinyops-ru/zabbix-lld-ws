@@ -82,16 +82,21 @@ impl <T: ZabbixApiClient> UrlSourceProvider for ZabbixUrlSourceProvider<T> {
                 let url = String::from(&groups[1]);
                 debug!("- url '{url}'");
 
-                if let Some(host) = hosts.iter().find(|host| host.host_id == item.host_id) {
-                    let url_source = UrlSource {
-                        zabbix_host: host.host.to_string(),
-                        url,
-                    };
+                if url.to_lowercase().starts_with("http") {
+                    if let Some(host) = hosts.iter().find(|host| host.host_id == item.host_id) {
+                        let url_source = UrlSource {
+                            zabbix_host: host.host.to_string(),
+                            url,
+                        };
 
-                    debug!("add url source: {:?}", url_source);
+                        debug!("add url source: {:?}", url_source);
 
-                    results.push(url_source)
+                        results.push(url_source)
+                    }
+                } else {
+                    warn!("invalid url found '{}' for item '{}'", url, item.name)
                 }
+
             }
         }
 
