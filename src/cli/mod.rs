@@ -142,7 +142,7 @@ pub fn process_cli_commands(matches: &ArgMatches) {
                         ) {
                             Ok(_) => exit(OK_EXIT_CODE),
                             Err(e) => {
-                                error!("generation error: {}", e);
+                                eprintln!("generation error: {}", e);
                                 error!("{}", e.root_cause());
                                 exit(ERROR_EXIT_CODE)
                             }
@@ -158,7 +158,7 @@ pub fn process_cli_commands(matches: &ArgMatches) {
                         ) {
                             Ok(_) => exit(OK_EXIT_CODE),
                             Err(e) => {
-                                error!("generation error: {}", e);
+                                eprintln!("generation error: {}", e);
                                 error!("{}", e.root_cause());
                                 exit(ERROR_EXIT_CODE)
                             }
