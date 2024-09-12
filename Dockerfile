@@ -1,4 +1,4 @@
-FROM rust:1.80.1-bullseye as builder
+FROM rust:1.80.1-bookworm as builder
 
 WORKDIR /build
 
