@@ -41,8 +41,14 @@ impl <T: ZabbixApiClient> UrlSourceProvider for ZabbixUrlSourceProvider<T> {
 
         debug!("items received: {:?}", items);
 
-        let host_ids: Vec<String> = items.iter()
-            .map(|item| item.host_id.to_string()).collect();
+        let mut host_ids: Vec<String> = vec![];
+
+        items.iter()
+             .for_each(|item| {
+                 if !host_ids.contains(&item.host_id) {
+                    host_ids.push(item.host_id.to_string())
+                 }
+             });
 
         #[derive(Serialize)]
         struct Params {
