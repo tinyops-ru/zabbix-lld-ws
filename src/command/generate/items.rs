@@ -14,13 +14,19 @@ use crate::config::trigger::ZabbixTriggerConfig;
 use crate::config::ws::WebScenarioConfig;
 use crate::source::UrlSourceProvider;
 use crate::template::{get_template_vars, process_template_string};
-use crate::types::EmptyResult;
+use crate::types::{EmptyResult, OptionalResult};
+
+#[derive(Serialize)]
+struct HostFilter {
+    pub host: Vec<String>
+}
 
 pub fn generate_web_scenarios_and_triggers(
     zabbix_client: &impl ZabbixApiClient, zabbix_login: &str, zabbix_password: &str,
     url_source_provider: impl UrlSourceProvider, target_hostname: &str,
     web_scenario_config: &WebScenarioConfig,
     item_config: &ZabbixItemConfig, trigger_config: &ZabbixTriggerConfig) -> EmptyResult {
+    info!("generate web scenarios and triggers..");
 
     let url_sources = url_source_provider.get_url_sources()?;
 
@@ -28,25 +34,14 @@ pub fn generate_web_scenarios_and_triggers(
 
     let session = zabbix_client.get_auth_session(&zabbix_login, &zabbix_password)?;
 
-    #[derive(Serialize)]
-    struct HostFilter {
-        pub host: Vec<String>
-    }
-
     for url_source in url_sources {
+        debug!("url source: {:?}", url_source);
 
-        let zabbix_host: String;
-
-        if target_hostname.is_empty() {
-            url_source.zabbix_host.to_string()
-
-        } else {
-            target_hostname.to_string()
-        }
+        let zabbix_host: String = url_source.zabbix_host.to_string();
 
         let request = GetHostsRequest {
             filter: HostFilter {
-                host: vec![zabbix_host],
+                host: vec![zabbix_host.to_string()],
             },
         };
 
@@ -106,9 +101,23 @@ pub fn generate_web_scenarios_and_triggers(
                         no: "1".to_string(),
                     };
 
+                    let host_id: String = if target_hostname.is_empty() {
+                        host.host_id.to_string()
+
+                    } else {
+                        if let Some(host_id) = find_host_id_by_name(zabbix_client, &session, &target_hostname)? {
+                            host_id
+
+                        } else {
+                            host.host_id.to_string()
+                        }
+                    };
+
+                    debug!("host id '{host_id}'");
+
                     let request = CreateWebScenarioRequest {
                         name: scenario_name.to_string(),
-                        host_id: host.host_id.to_string(),
+                        host_id,
                         steps: vec![step],
                     };
 
@@ -147,4 +156,25 @@ pub fn generate_web_scenarios_and_triggers(
     }
 
     Ok(())
+}
+
+fn find_host_id_by_name(zabbix_client: &impl ZabbixApiClient,
+                        session: &str, name: &str) -> OptionalResult<String> {
+    let request = GetHostsRequest {
+        filter: HostFilter {
+            host: vec![name.to_string()],
+        },
+    };
+
+    let hosts_found = zabbix_client.get_hosts(&session, &request)?;
+
+    match hosts_found.first() {
+        Some(host) => {
+            Ok(Some(host.host_id.to_string()))
+        }
+        None => {
+            info!("host wasn't found by name '{name}'");
+            Ok(None)
+        }
+    }
 }

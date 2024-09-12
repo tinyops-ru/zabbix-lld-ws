@@ -21,7 +21,7 @@ pub const FILE_ARG_DEFAULT_VALUE: &str = "urls.txt";
 pub const FILE_SHORT_ARG: &str = "f";
 pub const SOURCE_SHORT_ARG: &str = "s";
 pub const ITEM_KEY_SEARCH_MASK_ARG: &str = "item-key-starts-with";
-pub const ITEM_KEY_SEARCH_MASK_DEFAULT_VALUE: &str = "vhost.item";
+pub const ITEM_KEY_SEARCH_MASK_DEFAULT_VALUE: &str = "nginx.vhost.item";
 
 pub const WORK_DIR_ARG: &str = "work-dir";
 pub const WORK_DIR_SHORT_ARG: &str = "d";
@@ -111,7 +111,7 @@ fn init_logging(matches: &ArgMatches) {
 
 pub fn process_cli_commands(matches: &ArgMatches) {
     match matches.subcommand() {
-        Some(("asdasd", matches)) => {
+        Some(("gen", matches)) => {
             let config_file_path = Path::new("wszl.yml");
 
             match load_config_from_file(config_file_path) {
@@ -122,8 +122,11 @@ pub fn process_cli_commands(matches: &ArgMatches) {
                         http_client, &config.zabbix.api.endpoint);
 
                     let item_key_search_mask = matches.get_one::<String>(ITEM_KEY_SEARCH_MASK_ARG).unwrap();
+                    debug!("item key search mask '{item_key_search_mask}'");
                     let url_source_type = matches.get_one::<String>(SOURCE_ARG).unwrap();
+                    debug!("url source type '{url_source_type}'");
                     let filename = matches.get_one::<String>(FILE_ARG).unwrap();
+                    debug!("filename '{filename}'");
 
                     info!("collecting urls from source '{url_source_type}'..");
 
@@ -133,7 +136,8 @@ pub fn process_cli_commands(matches: &ArgMatches) {
                         );
 
                         match generate_web_scenarios_and_triggers(
-                            &zabbix_client, &config.zabbix.api.username, &config.zabbix.api.password, url_provider,
+                            &zabbix_client, &config.zabbix.api.username, &config.zabbix.api.password,
+                            url_provider, &config.zabbix.target_hostname,
                             &config.zabbix.scenario, &config.zabbix.item, &config.zabbix.trigger
                         ) {
                             Ok(_) => exit(OK_EXIT_CODE),
@@ -148,7 +152,8 @@ pub fn process_cli_commands(matches: &ArgMatches) {
                         let url_provider = FileUrlSourceProvider::new(filename);
 
                         match generate_web_scenarios_and_triggers(
-                            &zabbix_client, &config.zabbix.api.username, &config.zabbix.api.password, url_provider,
+                            &zabbix_client, &config.zabbix.api.username, &config.zabbix.api.password,
+                            url_provider, &config.zabbix.target_hostname,
                             &config.zabbix.scenario, &config.zabbix.item, &config.zabbix.trigger
                         ) {
                             Ok(_) => exit(OK_EXIT_CODE),
