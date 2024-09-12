@@ -55,11 +55,6 @@ pub fn generate_web_scenarios_and_triggers(
 
                 let item_key = item_config.key_template.replace("{}", &url_source.url);
 
-                #[derive(Serialize)]
-                struct ItemSearch {
-                    pub key_: String
-                }
-
                 let request = GetItemsRequestByKey::new(&item_key);
 
                 let items_found = zabbix_client.get_items(&session, &request)?;
