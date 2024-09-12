@@ -35,7 +35,9 @@ Check [urls.txt-example](urls.txt-example) as an example.
 
 ## Zabbix API version
 
-[Zabbix API v6 only](https://www.zabbix.com/documentation/6.0/en/manual/api)
+Tested with [v6](https://www.zabbix.com/documentation/6.0/en/manual/api).
+
+It might work with v5.
 
 ## Troubleshooting
 
