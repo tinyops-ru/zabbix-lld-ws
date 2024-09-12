@@ -8,7 +8,7 @@ zabbix:
 
   item:
     name-template: "Vhost '{}' item"
-    key-template: 'vhost.item[{}]'
+    key-template: 'nginx.vhost.item[{}]'
     interface-id: '0'
     delay: '5m'
     # Item type:
