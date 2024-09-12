@@ -190,5 +190,5 @@ fn get_argument_path_value<'a>(matches: &'a ArgMatches, long_argument: &str,
         None => {}
     }
 
-    return path;
+    path
 }
