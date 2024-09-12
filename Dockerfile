@@ -12,8 +12,8 @@ RUN apt update -y && \
     cargo test && \
     cargo build --release && \
     cp target/release/zabbix-lld-ws wszl && \
-    eu-elfcompress s2v && \
-    strip s2v && \
+    eu-elfcompress wszl && \
+    strip wszl && \
     upx -9 --lzma wszl
 
 FROM scratch
