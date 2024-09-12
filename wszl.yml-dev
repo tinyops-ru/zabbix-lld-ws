@@ -1,8 +1,30 @@
 zabbix:
+  #target-hostname: ''
+
   api:
-    endpoint: http://localhost:3080/api_jsonrpc.php
-    username: Admin
-    password: zabbix
+    endpoint: https://zabbix.company.com/api_jsonrpc.php
+    username: CHANGE-ME
+    password: CHANGE-ME
+
+  item:
+    name-template: "Vhost '{}' item"
+    key-template: 'vhost.item[{}]'
+    interface-id: '0'
+    delay: '5m'
+    # Item type:
+    # 0 - Zabbix agent
+    # 7 - Zabbix agent (agent)
+    type: 7
+    # Possible values:
+    # 0 - numeric float;
+    # 1 - character;
+    # 2 - log;
+    # 3 - numeric unsigned;
+    # 4 - text.
+    value-type: 0
+    #tags:
+    #  - tag: 'abc'
+    #    value: 'something'
 
   trigger:
     name: "Site '${URL}' is unavailable"
@@ -15,10 +37,8 @@ zabbix:
     key-starts-with: "Check index page '"
 
     # Template variables are supported: ${HOST}, ${URL}
-    name: "Check index page '${URL}'"
+    name-template: "Check index page '${URL}'"
     response-timeout: "15s"
     expect-status-code: "200"
     attempts: 3
     update-interval: "5m"
-
-
