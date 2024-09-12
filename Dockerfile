@@ -11,7 +11,7 @@ RUN apt update -y && \
         cp upx-4.0.2-amd64_linux/upx /usr/bin/upx && chmod +x /usr/bin/upx && \
     cargo test && \
     cargo build --release && \
-    cp target/release/zabbix--lld-ws wszl && \
+    cp target/release/zabbix-lld-ws wszl && \
     eu-elfcompress s2v && \
     strip s2v && \
     upx -9 --lzma wszl
