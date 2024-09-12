@@ -29,8 +29,24 @@ zabbix:
   trigger:
     name: "Site '${URL}' is unavailable"
 
+    priority: 4
+
+    # Problem expression
     # Template variables are supported: ${HOST}, ${URL}
-    value: "${HOST}:web.test.fail[Check index page '${URL}'].last()"
+    problem-expression: "avg(/${HOST}/web.test.fail[${URL}],#3)>=1"
+    #problem-expression: "${HOST}:web.test.fail[Check index page '${URL}'].last()"
+
+    recovery-mode: 0
+
+    # Recovery expression
+    # Template variables are supported: ${HOST}, ${URL}
+    recovery-expression: "last(/${HOST}/web.test.fail[${URL}])=0"
+
+    # Template variables are supported: ${HOST}, ${URL}
+    event-name: "${URL} is down"
+
+    # Template variables are supported: ${HOST}, ${URL}
+    url: "${URL}"
 
   scenario:
     # Search existing elements

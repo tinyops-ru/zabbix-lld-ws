@@ -15,8 +15,9 @@ pub struct WebScenarioConfig {
 impl Display for WebScenarioConfig {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
-            f, "name-template: '{}', response-timeout: '{}', expect-status-code: '{}, attempts: {}, update-interval: '{}'",
-            self.name_template, self.response_timeout,
+            f, "key-starts-with: '{}', name-template: '{}', response-timeout: '{}', \
+            expect-status-code: '{}, attempts: {}, update-interval: '{}'",
+            self.key_starts_with, self.name_template, self.response_timeout,
             self.expect_status_code, self.attempts, self.update_interval
         )
     }

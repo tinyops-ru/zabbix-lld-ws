@@ -1,6 +1,5 @@
-use serde_derive::Serialize;
+use anyhow::Context;
 use zabbix_api::client::ZabbixApiClient;
-use zabbix_api::host::get::GetHostsRequest;
 use zabbix_api::item::create::CreateItemRequest;
 use zabbix_api::item::get::GetItemsRequestByKey;
 use zabbix_api::trigger::create::CreateTriggerRequest;
@@ -14,12 +13,8 @@ use crate::config::trigger::ZabbixTriggerConfig;
 use crate::config::ws::WebScenarioConfig;
 use crate::source::UrlSourceProvider;
 use crate::template::{get_template_vars, process_template_string};
-use crate::types::{EmptyResult, OptionalResult};
-
-#[derive(Serialize)]
-struct HostFilter {
-    pub host: Vec<String>
-}
+use crate::types::EmptyResult;
+use crate::zabbix::host::find_zabbix_host_id;
 
 pub fn generate_web_scenarios_and_triggers(
     zabbix_client: &impl ZabbixApiClient, zabbix_login: &str, zabbix_password: &str,
@@ -34,142 +29,121 @@ pub fn generate_web_scenarios_and_triggers(
 
     let session = zabbix_client.get_auth_session(&zabbix_login, &zabbix_password)?;
 
+    let mut host_id: String = String::new();
+
+    if !target_hostname.is_empty() {
+        if let Some(id) = find_zabbix_host_id(zabbix_client, &session, &target_hostname)? {
+            host_id = id;
+        }
+    };
+
     for url_source in url_sources {
         debug!("url source: {:?}", url_source);
 
-        let zabbix_host: String = url_source.zabbix_host.to_string();
+        let mut zabbix_host: String = url_source.zabbix_host.to_string();
 
-        let request = GetHostsRequest {
-            filter: HostFilter {
-                host: vec![zabbix_host.to_string()],
-            },
-        };
-
-        debug!("looking for host '{zabbix_host}'..");
-
-        let hosts_found = zabbix_client.get_hosts(&session, &request)?;
-
-        match hosts_found.first() {
-            Some(host) => {
-                info!("zabbix host '{zabbix_host}' has been found");
-
-                let item_key = item_config.key_template.replace("{}", &url_source.url);
-
-                let request = GetItemsRequestByKey::new(&item_key);
-
-                let items_found = zabbix_client.get_items(&session, &request)?;
-
-                if items_found.is_empty() {
-                    let name = item_config.name_template.replace("{}", &url_source.url);
-
-                    let request = CreateItemRequest {
-                        name,
-                        key_: item_key,
-                        host_id: host.host_id.to_string(),
-                        r#type: item_config.r#type,
-                        value_type: item_config.value_type,
-                        interface_id: item_config.interface_id.to_string(),
-                        tags: item_config.tags.clone(),
-                        delay: item_config.delay.to_string(),
-                    };
-
-                    zabbix_client.create_item(&session, &request)?;
-
-                } else {
-                    info!("item with key '{item_key}' already exists, skip")
-                }
-
-                let template_vars = get_template_vars(&host.host, &url_source.url);
-
-                // TODO: make configurable
-                let scenario_name = format!("Check index page '{}'", &url_source.url);
-
-                let request = GetWebScenarioByNameRequest::new(&scenario_name);
-
-                let web_scenarios = zabbix_client.get_webscenarios(&session, &request)?;
-
-                if web_scenarios.is_empty() {
-                    let step = ZabbixWebScenarioStep {
-                        name: process_template_string(&web_scenario_config.name_template, &template_vars),
-                        url: url_source.url.to_string(),
-                        status_codes: web_scenario_config.expect_status_code.to_string(),
-                        no: "1".to_string(),
-                    };
-
-                    let host_id: String = if target_hostname.is_empty() {
-                        host.host_id.to_string()
-
-                    } else {
-                        if let Some(host_id) = find_host_id_by_name(zabbix_client, &session, &target_hostname)? {
-                            host_id
-
-                        } else {
-                            host.host_id.to_string()
-                        }
-                    };
-
-                    debug!("host id '{host_id}'");
-
-                    let request = CreateWebScenarioRequest {
-                        name: scenario_name.to_string(),
-                        host_id,
-                        steps: vec![step],
-                    };
-
-                    zabbix_client.create_webscenario(&session, &request)?;
-
-                    info!("web scenario '{scenario_name}' has been created")
-
-                } else { info!("web-scenario '{scenario_name}' already exists, skip"); }
-
-                let trigger_description = process_template_string(&trigger_config.name, &template_vars);
-                let trigger_expression = process_template_string(&trigger_config.value, &template_vars);
-
-                let request = GetTriggerByDescriptionRequest::new(&trigger_description);
-
-                let triggers = zabbix_client.get_triggers(&session, &request)?;
-
-                if triggers.is_empty() {
-                    info!("trigger '{trigger_description}' wasn't found, creating..");
-
-                    let request = CreateTriggerRequest {
-                        description: trigger_description.to_string(),
-                        expression: trigger_expression.to_string(),
-                        dependencies: vec![],
-                        tags: vec![],
-                    };
-
-                    zabbix_client.create_trigger(&session, &request)?;
-
-                    info!("trigger '{trigger_description}' has been created")
-
-                } else { info!("trigger '{trigger_description}' already exists, skip") }
-
+        if target_hostname.is_empty() {
+            if let Some(id) = find_zabbix_host_id(zabbix_client, &session, &url_source.zabbix_host)? {
+                host_id = id;
             }
-            None => warn!("zabbix host '{}' wasn't found, skip", url_source.zabbix_host)
+        } else {
+            zabbix_host = target_hostname.to_string();
         }
+
+        debug!("target host id '{host_id}'");
+
+        if !host_id.is_empty() {
+            let item_key = item_config.key_template.replace("{}", &url_source.url);
+
+            let request = GetItemsRequestByKey::new(&item_key);
+
+            let items_found = zabbix_client.get_items(&session, &request)?;
+
+            if items_found.is_empty() {
+                let name = item_config.name_template.replace("{}", &url_source.url);
+
+                let request = CreateItemRequest {
+                    name,
+                    key_: item_key,
+                    host_id: host_id.to_string(),
+                    r#type: item_config.r#type,
+                    value_type: item_config.value_type,
+                    interface_id: item_config.interface_id.to_string(),
+                    tags: item_config.tags.clone(),
+                    delay: item_config.delay.to_string(),
+                };
+
+                debug!("create item request: {:?}", request);
+
+                zabbix_client.create_item(&session, &request)?;
+
+            } else {
+                info!("item with key '{item_key}' already exists, skip")
+            }
+
+            let template_vars = get_template_vars(&zabbix_host, &url_source.url);
+
+            let scenario_name = process_template_string(
+                &web_scenario_config.name_template, &template_vars);
+
+            let request = GetWebScenarioByNameRequest::new(&scenario_name);
+
+            let web_scenarios = zabbix_client.get_webscenarios(&session, &request)?;
+
+            if web_scenarios.is_empty() {
+                let step = ZabbixWebScenarioStep {
+                    name: process_template_string(&web_scenario_config.name_template, &template_vars),
+                    url: url_source.url.to_string(),
+                    status_codes: web_scenario_config.expect_status_code.to_string(),
+                    no: "1".to_string(),
+                };
+
+                let request = CreateWebScenarioRequest {
+                    name: scenario_name.to_string(),
+                    host_id: host_id.to_string(),
+                    steps: vec![step],
+                };
+
+                zabbix_client.create_webscenario(&session, &request).context("unable to create web-scenario")?;
+
+                info!("web scenario '{scenario_name}' has been created")
+
+            } else { info!("web-scenario '{scenario_name}' already exists, skip"); }
+
+            let trigger_description = process_template_string(&trigger_config.name, &template_vars);
+
+            let request = GetTriggerByDescriptionRequest::new(&trigger_description);
+
+            let triggers = zabbix_client.get_triggers(&session, &request)?;
+
+            if triggers.is_empty() {
+                info!("trigger '{trigger_description}' wasn't found, creating..");
+
+                let request = CreateTriggerRequest {
+                    description: trigger_description.to_string(),
+                    expression: process_template_string(
+                        &trigger_config.problem_expression, &template_vars),
+                    priority: trigger_config.priority,
+                    recovery_mode: trigger_config.recovery_mode,
+                    recovery_expression: process_template_string(
+                        &trigger_config.recovery_expression, &template_vars),
+                    url: process_template_string(&trigger_config.url, &template_vars),
+                    event_name: process_template_string(&trigger_config.event_name, &template_vars),
+                    dependencies: vec![],
+                    tags: vec![],
+                };
+
+                zabbix_client.create_trigger(&session, &request)?;
+
+                info!("trigger '{trigger_description}' has been created")
+
+            } else { info!("trigger '{trigger_description}' already exists, skip") }
+
+        } else {
+            warn!("zabbix host '{}' wasn't found, skip", zabbix_host)
+        }
+
     }
 
     Ok(())
-}
-
-fn find_host_id_by_name(zabbix_client: &impl ZabbixApiClient,
-                        session: &str, name: &str) -> OptionalResult<String> {
-    let request = GetHostsRequest {
-        filter: HostFilter {
-            host: vec![name.to_string()],
-        },
-    };
-
-    let hosts_found = zabbix_client.get_hosts(&session, &request)?;
-
-    match hosts_found.first() {
-        Some(host) => {
-            Ok(Some(host.host_id.to_string()))
-        }
-        None => {
-            info!("host wasn't found by name '{name}'");
-            Ok(None)
-        }
-    }
 }

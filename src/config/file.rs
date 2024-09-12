@@ -61,7 +61,12 @@ mod tests {
 
                         trigger: ZabbixTriggerConfig {
                             name: "Site '${URL}' is unavailable".to_string(),
-                            value: "last(/${HOST}/web.test.fail[Check index page '${URL}'])<>0".to_string(),
+                            priority: 4,
+                            problem_expression: "avg(/${HOST}/web.test.fail[${URL}],#3)>=1".to_string(),
+                            recovery_mode: 0,
+                            recovery_expression: "last(/${HOST}/web.test.fail[${URL}])=0".to_string(),
+                            event_name: "${URL} is down".to_string(),
+                            url: "${URL}".to_string(),
                         },
 
                         scenario: WebScenarioConfig {

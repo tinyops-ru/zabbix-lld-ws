@@ -17,6 +17,8 @@ pub mod command;
 
 pub mod source;
 
+pub mod zabbix;
+
 #[cfg(test)]
 pub mod tests;
 
