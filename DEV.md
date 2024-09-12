@@ -5,7 +5,7 @@
 **Requirements:**
 
 - docker
-- [vhdt tool](https://github.com/lebe-dev/vhost-discovery-tool) installed
+- [vhdt](https://github.com/lebe-dev/vhost-discovery-tool)
 
 Start fresh Zabbix Server:
 

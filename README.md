@@ -1,15 +1,14 @@
 # WSZL
 
-Add Web Scenarios support to [Zabbix Low Level Discovery](https://www.zabbix.com/documentation/current/manual/discovery/low_level_discovery).
+Add Web Scenarios support to [Zabbix Low Level Discovery](https://www.zabbix.com/documentation/current/manual/discovery/low_level_discovery) feature.
 
 ## Why?
 
-Zabbix team provides very fragile http-item implementation and don't want to support 
-for Web-scenarios in Low Level Discovery feature. So, I've implemented this tool to fix that.
+Zabbix Low Level Discovery doesn't support web scenarios. Let's fix that :)
 
 ## Installation
 
-See [INSTALL.md](INSTALL.md).
+See [INSTALL.md](docs/INSTALL.md).
 
 ## Usage
 
@@ -27,14 +26,12 @@ Or use file as a source for urls:
 wszl -d /etc/zabbix gen --source=file --file=urls.txt
 ```
 
-Check `urls.txt-example` as example.
+Check [urls.txt-example](urls.txt-example) as an example.
 
 ## How it works
 
-1. WSZL gets items from Zabbix API by mask or file
-2. Creates web scenarios and triggers
-    - Web scenario params: title - "Check index page 'XYZ'", expected response code - 200
-    - Trigger params: severity - High (4), title - 'Site XYZ is unavailable', expression `web.test.fail`  
+1. WSZL gets items from Zabbix API by mask (`--item-key-starts-with`) or list of urls from file (`--file`).
+2. Creates web scenarios and triggers.
 
 ## Zabbix API version
 
@@ -42,13 +39,7 @@ Check `urls.txt-example` as example.
 
 ## Troubleshooting
 
-Check `wszl.log` file for details.
-
-You can switch logging levels with `--log-level` option. Example:
-
-```shell
-wszl --log-level=debug gen
-```
+See [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ## Contributors
 
