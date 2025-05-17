@@ -12,7 +12,8 @@ pub fn load_config_from_file(file_path: &Path) -> OperationResult<AppConfig> {
         .add_source(config::File::with_name(&file_path_str))
         .build()?;
 
-    let config = settings.try_deserialize::<AppConfig>()
+    let config = settings
+        .try_deserialize::<AppConfig>()
         .context("unable to load config")?;
 
     info!("config loaded: {}", config);
@@ -24,9 +25,11 @@ pub fn load_config_from_file(file_path: &Path) -> OperationResult<AppConfig> {
 mod tests {
     use crate::config::file::load_config_from_file;
     use crate::config::item::ZabbixItemConfig;
-    use crate::config::{AppConfig, WebScenarioConfig, ZabbixApiConfig, ZabbixConfig, ZabbixTriggerConfig};
+    use crate::config::{
+        AppConfig, WebScenarioConfig, ZabbixApiConfig, ZabbixConfig, ZabbixTriggerConfig,
+    };
     use std::path::Path;
-    use zabbix_api::host::ZabbixHostTag;
+    use zabbix_api::host::model::ZabbixHostTag;
 
     #[test]
     fn complete_config_should_be_loaded_from_file() {
@@ -51,20 +54,20 @@ mod tests {
                             delay: "5m".to_string(),
                             r#type: 7,
                             value_type: 0,
-                            tags: vec![
-                                ZabbixHostTag {
-                                    tag: "abc".to_string(),
-                                    value: "something".to_string(),
-                                }
-                            ],
+                            tags: vec![ZabbixHostTag {
+                                tag: "abc".to_string(),
+                                value: "something".to_string(),
+                            }],
                         },
 
                         trigger: ZabbixTriggerConfig {
                             name: "Site '${URL}' is unavailable".to_string(),
                             priority: 4,
-                            problem_expression: "avg(/${HOST}/web.test.fail[${URL}],#3)>=1".to_string(),
+                            problem_expression: "avg(/${HOST}/web.test.fail[${URL}],#3)>=1"
+                                .to_string(),
                             recovery_mode: 0,
-                            recovery_expression: "last(/${HOST}/web.test.fail[${URL}])=0".to_string(),
+                            recovery_expression: "last(/${HOST}/web.test.fail[${URL}])=0"
+                                .to_string(),
                             event_name: "${URL} is down".to_string(),
                             url: "${URL}".to_string(),
                         },
@@ -76,7 +79,7 @@ mod tests {
                             expect_status_code: "200".to_string(),
                             attempts: 3,
                             update_interval: "5m".to_string(),
-                        }
+                        },
                     },
                 };
 
