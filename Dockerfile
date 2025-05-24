@@ -1,4 +1,4 @@
-FROM rust:1.87.0-bookworm AS builder
+FROM rust:1.87.0-bookworm as builder
 
 WORKDIR /build
 
@@ -10,8 +10,8 @@ RUN apt update -y && \
     unxz upx-4.0.2-amd64_linux.tar.xz && tar xvf upx-4.0.2-amd64_linux.tar && \
     cp upx-4.0.2-amd64_linux/upx /usr/bin/upx && chmod +x /usr/bin/upx && \
     cargo test && \
-    cargo build --release && \
-    cp target/release/zabbix-lld-ws wszl && \
+    RUSTFLAGS='-C target-feature=+crt-static' cargo build --release --target x86_64-unknown-linux-gnu && \
+    cp target/x86_64-unknown-linux-gnu/release/zabbix-lld-ws wszl && \
     eu-elfcompress wszl && \
     strip wszl && \
     upx -9 --lzma wszl
