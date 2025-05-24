@@ -1,6 +1,6 @@
 use serde_derive::Deserialize;
 use std::fmt::{Display, Formatter};
-use zabbix_api::host::ZabbixHostTag;
+use zabbix_api::host::model::ZabbixHostTag;
 
 /// Zabbix API: https://www.zabbix.com/documentation/6.0/en/manual/api/reference/item/object#item
 #[derive(PartialEq, Deserialize, Clone, Debug)]
@@ -19,7 +19,7 @@ pub struct ZabbixItemConfig {
     pub value_type: u8,
 
     #[serde(default = "get_empty_tag_vec")]
-    pub tags: Vec<ZabbixHostTag>
+    pub tags: Vec<ZabbixHostTag>,
 }
 
 impl Display for ZabbixItemConfig {

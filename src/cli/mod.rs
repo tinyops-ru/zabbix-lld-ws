@@ -8,7 +8,7 @@ use reqwest::blocking::Client;
 use std::env;
 use std::path::Path;
 use std::process::exit;
-use zabbix_api::client::v6::ZabbixApiV6Client;
+use zabbix_api::client::client::ZabbixApiClientImpl;
 
 pub const GENERATE_COMMAND: &str = "gen";
 
@@ -35,7 +35,7 @@ pub const ERROR_EXIT_CODE: i32 = 1;
 
 pub fn get_cli_app() -> ArgMatches {
     let matches = Command::new("WSZL tool")
-        .version("1.0.0")
+        .version("1.1.0")
         .author("Eugene Lebedev <duke.tougu@gmail.com>")
         .about("Add Web scenarios support for Zabbix Low Level Discovery")
         .arg_required_else_help(true)
@@ -45,7 +45,7 @@ pub fn get_cli_app() -> ArgMatches {
                 .short('d')
                 .help("set working directory")
                 .required(false)
-                .default_value(WORK_DIR_DEFAULT_VALUE)
+                .default_value(WORK_DIR_DEFAULT_VALUE),
         )
         .arg(
             Arg::new(LOG_LEVEL_ARG)
@@ -53,34 +53,35 @@ pub fn get_cli_app() -> ArgMatches {
                 .help("set logging level. possible values: debug, info, error, warn, trace")
                 .ignore_case(true)
                 .required(false)
-                .default_value(LOG_LEVEL_DEFAULT_VALUE)
+                .default_value(LOG_LEVEL_DEFAULT_VALUE),
         )
-        .subcommand(Command::new(GENERATE_COMMAND)
-            .about("generate web scenarios and triggers for zabbix items")
-            .arg(
-                Arg::new(SOURCE_ARG)
-                    .long(SOURCE_ARG)
-                    .short('s')
-                    .help("set urls source: zabbix, text-file")
-                    .default_value(SOURCE_ARG_DEFAULT_VALUE)
-                    .required(false)
-            )
-            .arg(
-                Arg::new(FILE_ARG)
-                    .long(FILE_ARG)
-                    .short('f')
-                    .requires(SOURCE_ARG)
-                    .help("urls file name. Expected file format (per row): zabbix-host|url")
-                    .default_value(FILE_ARG_DEFAULT_VALUE)
-                    .required(false)
-            )
-            .arg(
-                Arg::new(ITEM_KEY_SEARCH_MASK_ARG)
-                    .long(ITEM_KEY_SEARCH_MASK_ARG)
-                    .help("set search mask for items")
-                    .default_value(ITEM_KEY_SEARCH_MASK_DEFAULT_VALUE)
-                    .required(false)
-            )
+        .subcommand(
+            Command::new(GENERATE_COMMAND)
+                .about("generate web scenarios and triggers for zabbix items")
+                .arg(
+                    Arg::new(SOURCE_ARG)
+                        .long(SOURCE_ARG)
+                        .short('s')
+                        .help("set urls source: zabbix, text-file")
+                        .default_value(SOURCE_ARG_DEFAULT_VALUE)
+                        .required(false),
+                )
+                .arg(
+                    Arg::new(FILE_ARG)
+                        .long(FILE_ARG)
+                        .short('f')
+                        .requires(SOURCE_ARG)
+                        .help("urls file name. Expected file format (per row): zabbix-host|url")
+                        .default_value(FILE_ARG_DEFAULT_VALUE)
+                        .required(false),
+                )
+                .arg(
+                    Arg::new(ITEM_KEY_SEARCH_MASK_ARG)
+                        .long(ITEM_KEY_SEARCH_MASK_ARG)
+                        .help("set search mask for items")
+                        .default_value(ITEM_KEY_SEARCH_MASK_DEFAULT_VALUE)
+                        .required(false),
+                ),
         )
         .get_matches();
 
@@ -91,8 +92,8 @@ pub fn get_cli_app() -> ArgMatches {
 }
 
 pub fn init_working_dir(matches: &ArgMatches) {
-    let working_directory: &Path = get_argument_path_value(
-        &matches, WORK_DIR_ARG, WORK_DIR_DEFAULT_VALUE);
+    let working_directory: &Path =
+        get_argument_path_value(&matches, WORK_DIR_ARG, WORK_DIR_DEFAULT_VALUE);
 
     debug!("working directory '{}'", &working_directory.display());
 
@@ -101,8 +102,8 @@ pub fn init_working_dir(matches: &ArgMatches) {
 
 fn init_logging(matches: &ArgMatches) {
     let log_level = match matches.get_one::<String>(LOG_LEVEL_ARG) {
-        Some(value) => {value}
-        None => LOG_LEVEL_DEFAULT_VALUE
+        Some(value) => value,
+        None => LOG_LEVEL_DEFAULT_VALUE,
     };
 
     let logging_config = get_logging_config(log_level);
@@ -118,10 +119,11 @@ pub fn process_cli_commands(matches: &ArgMatches) {
                 Ok(config) => {
                     let http_client = Client::new();
 
-                    let zabbix_client = ZabbixApiV6Client::new(
-                        http_client, &config.zabbix.api.endpoint);
+                    let zabbix_client =
+                        ZabbixApiClientImpl::new(http_client, &config.zabbix.api.endpoint);
 
-                    let item_key_search_mask = matches.get_one::<String>(ITEM_KEY_SEARCH_MASK_ARG).unwrap();
+                    let item_key_search_mask =
+                        matches.get_one::<String>(ITEM_KEY_SEARCH_MASK_ARG).unwrap();
                     debug!("item key search mask '{item_key_search_mask}'");
                     let url_source_type = matches.get_one::<String>(SOURCE_ARG).unwrap();
                     debug!("url source type '{url_source_type}'");
@@ -132,13 +134,20 @@ pub fn process_cli_commands(matches: &ArgMatches) {
 
                     if url_source_type == SOURCE_ARG_DEFAULT_VALUE {
                         let url_provider = ZabbixUrlSourceProvider::new(
-                            &config.zabbix, zabbix_client.clone(), item_key_search_mask
+                            &config.zabbix,
+                            zabbix_client.clone(),
+                            item_key_search_mask,
                         );
 
                         match generate_web_scenarios_and_triggers(
-                            &zabbix_client, &config.zabbix.api.username, &config.zabbix.api.password,
-                            url_provider, &config.zabbix.target_hostname,
-                            &config.zabbix.scenario, &config.zabbix.item, &config.zabbix.trigger
+                            &zabbix_client,
+                            &config.zabbix.api.username,
+                            &config.zabbix.api.password,
+                            url_provider,
+                            &config.zabbix.target_hostname,
+                            &config.zabbix.scenario,
+                            &config.zabbix.item,
+                            &config.zabbix.trigger,
                         ) {
                             Ok(_) => exit(OK_EXIT_CODE),
                             Err(e) => {
@@ -147,14 +156,18 @@ pub fn process_cli_commands(matches: &ArgMatches) {
                                 exit(ERROR_EXIT_CODE)
                             }
                         }
-
                     } else if url_source_type == SOURCE_ARG_FILE_VALUE {
                         let url_provider = FileUrlSourceProvider::new(filename);
 
                         match generate_web_scenarios_and_triggers(
-                            &zabbix_client, &config.zabbix.api.username, &config.zabbix.api.password,
-                            url_provider, &config.zabbix.target_hostname,
-                            &config.zabbix.scenario, &config.zabbix.item, &config.zabbix.trigger
+                            &zabbix_client,
+                            &config.zabbix.api.username,
+                            &config.zabbix.api.password,
+                            url_provider,
+                            &config.zabbix.target_hostname,
+                            &config.zabbix.scenario,
+                            &config.zabbix.item,
+                            &config.zabbix.trigger,
                         ) {
                             Ok(_) => exit(OK_EXIT_CODE),
                             Err(e) => {
@@ -163,12 +176,10 @@ pub fn process_cli_commands(matches: &ArgMatches) {
                                 exit(ERROR_EXIT_CODE)
                             }
                         }
-
                     } else {
                         error!("unsupported data source type '{url_source_type}'");
                         exit(ERROR_EXIT_CODE)
                     }
-
                 }
                 Err(e) => {
                     error!("config load error: {}", e);
@@ -177,12 +188,15 @@ pub fn process_cli_commands(matches: &ArgMatches) {
                 }
             }
         }
-        _ => println!("use -h to get help")
+        _ => println!("use -h to get help"),
     }
 }
 
-fn get_argument_path_value<'a>(matches: &'a ArgMatches, long_argument: &str,
-                               default_path: &'a str) -> &'a Path {
+fn get_argument_path_value<'a>(
+    matches: &'a ArgMatches,
+    long_argument: &str,
+    default_path: &'a str,
+) -> &'a Path {
     let mut path: &Path = Path::new(default_path);
 
     match matches.get_one::<String>(long_argument) {

@@ -1,7 +1,7 @@
 use anyhow::Context;
 use regex::Regex;
 use serde_derive::Serialize;
-use zabbix_api::client::ZabbixApiClient;
+use zabbix_api::client::client::ZabbixApiClient;
 use zabbix_api::item::get::GetItemsRequestByKey;
 
 use crate::config::ZabbixConfig;
@@ -11,48 +11,60 @@ use crate::types::OperationResult;
 pub struct ZabbixUrlSourceProvider<T: ZabbixApiClient> {
     pub zabbix_config: ZabbixConfig,
     pub zabbix_client: T,
-    pub item_key_search_mask: String
+    pub item_key_search_mask: String,
 }
 
-impl <T: ZabbixApiClient> ZabbixUrlSourceProvider<T> {
-    pub fn new(zabbix_config: &ZabbixConfig, zabbix_service: T,
-               item_key_search_mask: &str) -> ZabbixUrlSourceProvider<T> {
+impl<T: ZabbixApiClient> ZabbixUrlSourceProvider<T> {
+    pub fn new(
+        zabbix_config: &ZabbixConfig,
+        zabbix_service: T,
+        item_key_search_mask: &str,
+    ) -> ZabbixUrlSourceProvider<T> {
         ZabbixUrlSourceProvider {
             zabbix_config: zabbix_config.clone(),
             zabbix_client: zabbix_service,
-            item_key_search_mask: item_key_search_mask.to_string()
+            item_key_search_mask: item_key_search_mask.to_string(),
         }
     }
 }
 
-impl <T: ZabbixApiClient> UrlSourceProvider for ZabbixUrlSourceProvider<T> {
+impl<T: ZabbixApiClient> UrlSourceProvider for ZabbixUrlSourceProvider<T> {
     fn get_url_sources(&self) -> OperationResult<Vec<UrlSource>> {
-        info!("getting url sources from zabbix server '{}'..", &self.zabbix_config.api.endpoint);
+        info!(
+            "getting url sources from zabbix server '{}'..",
+            &self.zabbix_config.api.endpoint
+        );
 
-        let auth_token = &self.zabbix_client.get_auth_session(
-            &self.zabbix_config.api.username, &self.zabbix_config.api.password).context("zabbix auth error")?;
+        let auth_token = &self
+            .zabbix_client
+            .get_auth_session(
+                &self.zabbix_config.api.username,
+                &self.zabbix_config.api.password,
+            )
+            .context("zabbix auth error")?;
 
         let request = GetItemsRequestByKey::new(&self.item_key_search_mask);
 
         debug!("request: {:?}", request);
 
-        let items = &self.zabbix_client.get_items(
-            &auth_token, &request).context("unable to find zabbix items")?;
+        let items = &self
+            .zabbix_client
+            .get_items(&auth_token, &request)
+            .context("unable to find zabbix items")?;
 
         debug!("items received: {:?}", items);
 
         let mut host_ids: Vec<String> = vec![];
 
-        items.iter()
-             .for_each(|item| {
-                 if !host_ids.contains(&item.host_id) {
-                    host_ids.push(item.host_id.to_string())
-                 }
-             });
+        items.iter().for_each(|item| {
+            if !host_ids.contains(&item.host_id) {
+                host_ids.push(item.host_id.to_string())
+            }
+        });
 
         #[derive(Serialize)]
         struct Params {
-            pub hostids: Vec<String>
+            pub hostids: Vec<String>,
         }
 
         let params = Params {
@@ -61,7 +73,9 @@ impl <T: ZabbixApiClient> UrlSourceProvider for ZabbixUrlSourceProvider<T> {
 
         debug!("search hosts by ids: {:?}", host_ids);
 
-        let hosts = &self.zabbix_client.get_hosts(&auth_token, &params)
+        let hosts = &self
+            .zabbix_client
+            .get_hosts(&auth_token, &params)
             .context("unable to find hosts")?;
 
         debug!("hosts received: {:?}", hosts);
@@ -77,7 +91,9 @@ impl <T: ZabbixApiClient> UrlSourceProvider for ZabbixUrlSourceProvider<T> {
             debug!("item '{}'", item.name);
 
             if url_pattern.is_match(&item.key_) {
-                let groups = url_pattern.captures_iter(&item.key_).next()
+                let groups = url_pattern
+                    .captures_iter(&item.key_)
+                    .next()
                     .context("unable to get pattern group")?;
                 let url = String::from(&groups[1]);
                 debug!("- url '{url}'");
@@ -96,7 +112,6 @@ impl <T: ZabbixApiClient> UrlSourceProvider for ZabbixUrlSourceProvider<T> {
                 } else {
                     warn!("invalid url found '{}' for item '{}'", url, item.name)
                 }
-
             }
         }
 

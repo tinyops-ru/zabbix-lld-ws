@@ -1,12 +1,12 @@
 use anyhow::Context;
-use zabbix_api::client::ZabbixApiClient;
+use zabbix_api::client::client::ZabbixApiClient;
 use zabbix_api::item::create::CreateItemRequest;
 use zabbix_api::item::get::GetItemsRequestByKey;
 use zabbix_api::trigger::create::CreateTriggerRequest;
 use zabbix_api::trigger::get::GetTriggerByDescriptionRequest;
 use zabbix_api::webscenario::create::CreateWebScenarioRequest;
 use zabbix_api::webscenario::get::GetWebScenarioByNameRequest;
-use zabbix_api::webscenario::ZabbixWebScenarioStep;
+use zabbix_api::webscenario::model::ZabbixWebScenarioStep;
 
 use crate::config::item::ZabbixItemConfig;
 use crate::config::trigger::ZabbixTriggerConfig;
@@ -17,10 +17,15 @@ use crate::types::EmptyResult;
 use crate::zabbix::host::find_zabbix_host_id;
 
 pub fn generate_web_scenarios_and_triggers(
-    zabbix_client: &impl ZabbixApiClient, zabbix_login: &str, zabbix_password: &str,
-    url_source_provider: impl UrlSourceProvider, target_hostname: &str,
+    zabbix_client: &impl ZabbixApiClient,
+    zabbix_login: &str,
+    zabbix_password: &str,
+    url_source_provider: impl UrlSourceProvider,
+    target_hostname: &str,
     web_scenario_config: &WebScenarioConfig,
-    item_config: &ZabbixItemConfig, trigger_config: &ZabbixTriggerConfig) -> EmptyResult {
+    item_config: &ZabbixItemConfig,
+    trigger_config: &ZabbixTriggerConfig,
+) -> EmptyResult {
     info!("generate web scenarios and triggers..");
 
     let url_sources = url_source_provider.get_url_sources()?;
@@ -43,9 +48,8 @@ pub fn generate_web_scenarios_and_triggers(
         let mut zabbix_host: String = url_source.zabbix_host.to_string();
 
         if target_hostname.is_empty() {
-            if let Some(id) = find_zabbix_host_id(
-                zabbix_client, &session, &url_source.zabbix_host
-            )? {
+            if let Some(id) = find_zabbix_host_id(zabbix_client, &session, &url_source.zabbix_host)?
+            {
                 host_id = id;
             }
         } else {
@@ -80,13 +84,12 @@ pub fn generate_web_scenarios_and_triggers(
                 debug!("create item request: {:?}", request);
 
                 zabbix_client.create_item(&session, &request)?;
-
             } else {
                 info!("item with key '{item_key}' already exists, skip")
             }
 
-            let scenario_name = process_template_string(
-                &web_scenario_config.name_template, &template_vars);
+            let scenario_name =
+                process_template_string(&web_scenario_config.name_template, &template_vars);
 
             let request = GetWebScenarioByNameRequest::new(&scenario_name);
 
@@ -94,7 +97,10 @@ pub fn generate_web_scenarios_and_triggers(
 
             if web_scenarios.is_empty() {
                 let step = ZabbixWebScenarioStep {
-                    name: process_template_string(&web_scenario_config.name_template, &template_vars),
+                    name: process_template_string(
+                        &web_scenario_config.name_template,
+                        &template_vars,
+                    ),
                     url: url_source.url.to_string(),
                     status_codes: web_scenario_config.expect_status_code.to_string(),
                     no: "1".to_string(),
@@ -106,11 +112,14 @@ pub fn generate_web_scenarios_and_triggers(
                     steps: vec![step],
                 };
 
-                zabbix_client.create_webscenario(&session, &request).context("unable to create web-scenario")?;
+                zabbix_client
+                    .create_webscenario(&session, &request)
+                    .context("unable to create web-scenario")?;
 
                 info!("web scenario '{scenario_name}' has been created")
-
-            } else { info!("web-scenario '{scenario_name}' already exists, skip"); }
+            } else {
+                info!("web-scenario '{scenario_name}' already exists, skip");
+            }
 
             let trigger_description = process_template_string(&trigger_config.name, &template_vars);
 
@@ -126,9 +135,10 @@ pub fn generate_web_scenarios_and_triggers(
 
                 if !trigger_config.recovery_expression.is_empty() {
                     recovery_mode = Some(trigger_config.recovery_mode);
-                    recovery_expression = Some(
-                        process_template_string(&trigger_config.recovery_expression, &template_vars)
-                    );
+                    recovery_expression = Some(process_template_string(
+                        &trigger_config.recovery_expression,
+                        &template_vars,
+                    ));
                 }
 
                 let mut url: Option<String> = None;
@@ -140,13 +150,18 @@ pub fn generate_web_scenarios_and_triggers(
                 let mut event_name: Option<String> = None;
 
                 if !trigger_config.event_name.is_empty() {
-                    event_name = Some(process_template_string(&trigger_config.event_name, &template_vars));
+                    event_name = Some(process_template_string(
+                        &trigger_config.event_name,
+                        &template_vars,
+                    ));
                 }
 
                 let request = CreateTriggerRequest {
                     description: trigger_description.to_string(),
                     expression: process_template_string(
-                        &trigger_config.problem_expression, &template_vars),
+                        &trigger_config.problem_expression,
+                        &template_vars,
+                    ),
                     priority: trigger_config.priority,
                     recovery_mode,
                     recovery_expression,
@@ -161,13 +176,12 @@ pub fn generate_web_scenarios_and_triggers(
                 zabbix_client.create_trigger(&session, &request)?;
 
                 info!("trigger '{trigger_description}' has been created")
-
-            } else { info!("trigger '{trigger_description}' already exists, skip") }
-
+            } else {
+                info!("trigger '{trigger_description}' already exists, skip")
+            }
         } else {
             warn!("zabbix host '{}' wasn't found, skip", zabbix_host)
         }
-
     }
 
     Ok(())

@@ -4,9 +4,6 @@ stages:
 build-app:
   stage: build
 
-  only:
-    - main
-
   script:
     - DOCKER_BUILDKIT=1 docker build --progress=plain -o out .
     - cp out/wszl wszl
@@ -23,7 +20,6 @@ build-app:
 
   tags:
     - linux
-
 #build-windows:
 #  stage: build
 #
